@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-surface-0: #0c0e12;
+  --color-surface-1: #12151c;
+  --color-surface-2: #1a1e28;
+  --color-border: #2a303c;
+  --color-muted: #8b93a7;
+  --color-foreground: #e8ebf2;
+  --color-accent: #5eead4;
+  --color-accent-dim: #2dd4bf33;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply m-0 min-h-dvh bg-surface-0 font-sans text-foreground;
+  }
+
+  #root {
+    @apply min-h-dvh;
+  }
+}
