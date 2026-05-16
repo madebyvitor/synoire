@@ -9,9 +9,11 @@ export function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <p className="text-sm font-medium uppercase tracking-widest text-firefly">
-          Synoire
-        </p>
+        <img
+          src="/logoSynoire.svg"
+          alt="Synoire"
+          className="block h-auto w-full max-w-2xl object-contain object-left max-h-32 sm:max-h-40 md:max-h-48"
+        />
         <h1 className="mt-4 text-balance text-4xl font-semibold tracking-tight text-primary md:text-5xl">
           Estudo coletivo sem ruído de rede social.
         </h1>
