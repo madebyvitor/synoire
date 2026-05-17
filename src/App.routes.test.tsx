@@ -42,13 +42,20 @@ describe('rotas (smoke, sem backend)', () => {
     ).toBeInTheDocument()
   })
 
-  it('renderiza sala de estudo imersiva', () => {
+  it('renderiza sala de estudo com onboarding de sessão', () => {
     renderAt('/salas/demo')
     expect(
       screen.getByRole('main', {
         name: /^sala de estudo:/i,
       }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /entrar no ciclo atual/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /aguardar próximo ciclo/i }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^iniciar$/i })).not.toBeInTheDocument()
   })
 
   it('sala de estudo não usa o shell lateral', () => {

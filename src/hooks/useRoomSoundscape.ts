@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const VOLUME_KEY = 'synoire-room-sound-volume'
+const FOCUS_CHIME_SRC = '/soundscapes/focus-chime.mp3'
+const CHIME_VOLUME = 0.25
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n))
@@ -37,7 +39,9 @@ async function fadeVolume(
 
 export function useRoomSoundscape() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const chimeRef = useRef<HTMLAudioElement | null>(null)
   const customUrlRef = useRef<string | null>(null)
+  const lastAmbientRef = useRef<{ src: string; label: string } | null>(null)
   const [userVolume, setUserVolume] = useState(readStoredVolume)
   const userVolRef = useRef(userVolume)
   userVolRef.current = userVolume
@@ -93,9 +97,11 @@ export function useRoomSoundscape() {
       try {
         await a.play()
         setActiveLabel(label)
+        lastAmbientRef.current = { src, label }
         await fadeVolume(a, 0, userVolRef.current, 380)
       } catch {
         setActiveLabel(null)
+        lastAmbientRef.current = null
       }
       busyRef.current = false
     },
@@ -111,6 +117,7 @@ export function useRoomSoundscape() {
       if (!file) {
         await stopInternal()
         setActiveLabel(null)
+        lastAmbientRef.current = null
         return
       }
       const url = URL.createObjectURL(file)
@@ -135,6 +142,39 @@ export function useRoomSoundscape() {
     else a.pause()
   }, [])
 
+  const playFocusChime = useCallback(async () => {
+    if (!chimeRef.current) {
+      const c = new Audio(FOCUS_CHIME_SRC)
+      c.preload = 'auto'
+      chimeRef.current = c
+    }
+    const chime = chimeRef.current
+    chime.volume = 0
+    chime.currentTime = 0
+    try {
+      await chime.play()
+      await fadeVolume(chime, 0, CHIME_VOLUME, 300)
+    } catch {
+      /* autoplay blocked or missing asset */
+    }
+
+    const ambient = lastAmbientRef.current
+    const a = audioRef.current
+    if (ambient && a?.src) {
+      if (a.paused) {
+        a.volume = 0
+        try {
+          await a.play()
+          await fadeVolume(a, 0, userVolRef.current, 380)
+        } catch {
+          /* ignore */
+        }
+      } else if (!busyRef.current) {
+        await fadeVolume(a, a.volume, userVolRef.current, 380)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     return () => {
       void stopInternal()
@@ -142,6 +182,7 @@ export function useRoomSoundscape() {
         URL.revokeObjectURL(customUrlRef.current)
         customUrlRef.current = null
       }
+      chimeRef.current = null
       audioRef.current = null
     }
   }, [stopInternal])
@@ -154,6 +195,7 @@ export function useRoomSoundscape() {
     playLibraryTrack,
     setCustomFile,
     togglePause,
+    playFocusChime,
     stop: stopInternal,
   }
 }

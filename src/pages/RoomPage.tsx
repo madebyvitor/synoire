@@ -2,27 +2,22 @@ import { motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ImmersiveCanvas } from '@/components/room/ImmersiveCanvas'
+import { PreRoomLounge } from '@/components/room/PreRoomLounge'
+import { SessionOnboarding } from '@/components/room/SessionOnboarding'
 import { SAMPLE_HUBS } from '@/data/sampleHubs'
 import { DEFAULT_SOUNDSCAPES } from '@/data/defaultSoundscapes'
+import { useGlobalRoomTimer } from '@/hooks/useGlobalRoomTimer'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { useRoomSoundscape } from '@/hooks/useRoomSoundscape'
+import { formatTimerSeconds } from '@/lib/roomTimer'
 import {
   pageStaggerContainer,
   pageStaggerItem,
-  pageStaggerListInner,
 } from '@/motion/pageStagger'
 
-const FOCUS_MINUTES = 25
-const BREAK_MINUTES = 5
-const MOCK_PRESENT = 128
+type SessionMode = 'onboarding' | 'lounge' | 'active'
 
-type Phase = 'focus' | 'break'
-
-function formatTime(totalSeconds: number) {
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
+const RITUAL_MS = 2000
 
 function roomTitle(roomId: string | undefined) {
   if (!roomId) return 'Sala de estudo'
@@ -39,29 +34,49 @@ export function RoomPage() {
   const prefersReducedMotion = usePrefersReducedMotion()
   const staggerC = pageStaggerContainer(prefersReducedMotion)
   const staggerItem = pageStaggerItem(prefersReducedMotion)
-  const staggerBtnRow = pageStaggerListInner(prefersReducedMotion)
+
+  const timer = useGlobalRoomTimer(roomId)
+  const { phase, remainingSeconds, secondsUntilNextFocus, presentCount } = timer
+
+  const [sessionMode, setSessionMode] = useState<SessionMode>('onboarding')
+  const [syncFlashUntil, setSyncFlashUntil] = useState(0)
+  const [ritualGlow, setRitualGlow] = useState(false)
+  const [timerRitualFade, setTimerRitualFade] = useState(false)
+
+  const [chromeLit, setChromeLit] = useState(false)
+  const [soundOpen, setSoundOpen] = useState(false)
+  const idleTimerRef = useRef<number | null>(null)
+  const prevPhaseRef = useRef(phase)
+  const loungePromotedRef = useRef(false)
+
+  const sound = useRoomSoundscape()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const entranceMs = useMemo(() => {
     if (prefersReducedMotion) return 420
     return 700 + Math.floor(Math.random() * 500)
   }, [prefersReducedMotion])
 
-  const [phase, setPhase] = useState<Phase>('focus')
-  const [remaining, setRemaining] = useState(FOCUS_MINUTES * 60)
-  const [running, setRunning] = useState(false)
-  const phaseRef = useRef(phase)
-  const tickRef = useRef<number | null>(null)
+  const isLounge = sessionMode === 'lounge'
+  const isActive = sessionMode === 'active'
+  const showChrome = isActive
 
-  const [chromeLit, setChromeLit] = useState(false)
-  const [soundOpen, setSoundOpen] = useState(false)
-  const idleTimerRef = useRef<number | null>(null)
-
-  const sound = useRoomSoundscape()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    phaseRef.current = phase
-  }, [phase])
+  const playCycleStartRitual = useCallback(() => {
+    if (prefersReducedMotion) {
+      setTimerRitualFade(true)
+      window.setTimeout(() => setTimerRitualFade(false), 400)
+      return
+    }
+    const until = performance.now() + RITUAL_MS
+    setSyncFlashUntil(until)
+    setRitualGlow(true)
+    setTimerRitualFade(true)
+    void sound.playFocusChime()
+    window.setTimeout(() => {
+      setRitualGlow(false)
+      setTimerRitualFade(false)
+    }, RITUAL_MS)
+  }, [prefersReducedMotion, sound])
 
   const bumpChrome = useCallback(() => {
     setChromeLit(true)
@@ -78,39 +93,29 @@ export function RoomPage() {
     }
   }, [])
 
-  const clearTick = useCallback(() => {
-    if (tickRef.current != null) {
-      window.clearInterval(tickRef.current)
-      tickRef.current = null
-    }
-  }, [])
+  useEffect(() => {
+    loungePromotedRef.current = false
+  }, [sessionMode])
 
   useEffect(() => {
-    if (!running) {
-      clearTick()
+    if (sessionMode !== 'lounge') return
+    if (secondsUntilNextFocus > 0) return
+    if (loungePromotedRef.current) return
+    loungePromotedRef.current = true
+    setSessionMode('active')
+    playCycleStartRitual()
+  }, [sessionMode, secondsUntilNextFocus, playCycleStartRitual])
+
+  useEffect(() => {
+    if (sessionMode !== 'active') {
+      prevPhaseRef.current = phase
       return
     }
-    tickRef.current = window.setInterval(() => {
-      setRemaining((prev) => {
-        if (prev > 1) return prev - 1
-        const nextPhase: Phase =
-          phaseRef.current === 'focus' ? 'break' : 'focus'
-        phaseRef.current = nextPhase
-        setPhase(nextPhase)
-        return (
-          (nextPhase === 'focus' ? FOCUS_MINUTES : BREAK_MINUTES) * 60
-        )
-      })
-    }, 1000)
-    return clearTick
-  }, [running, clearTick])
-
-  const reset = () => {
-    setRunning(false)
-    phaseRef.current = 'focus'
-    setPhase('focus')
-    setRemaining(FOCUS_MINUTES * 60)
-  }
+    if (prevPhaseRef.current === 'break' && phase === 'focus') {
+      playCycleStartRitual()
+    }
+    prevPhaseRef.current = phase
+  }, [phase, sessionMode, playCycleStartRitual])
 
   const chromeClass = chromeLit
     ? 'opacity-100'
@@ -118,119 +123,139 @@ export function RoomPage() {
 
   const easeInOut: [number, number, number, number] = [0.42, 0, 0.58, 1]
 
+  const canvasMotionSpeed = isLounge ? 0.35 : 1
+  const canvasPulseSpeed = isLounge ? 0.001 : 0.0025
+
   return (
-    <div
+    <motion.div
       role="main"
       aria-label={`Sala de estudo: ${title}`}
       className="fixed inset-0 z-10 overflow-hidden bg-night text-primary"
-      onMouseMove={bumpChrome}
+      onMouseMove={showChrome ? bumpChrome : undefined}
     >
       <motion.div
         className="pointer-events-none fixed inset-0 z-0"
         initial={
           prefersReducedMotion ? { scale: 1 } : { scale: 1.05 }
         }
-        animate={{ scale: 1 }}
+        animate={
+          ritualGlow && !prefersReducedMotion
+            ? { scale: [1, 1.06, 1], opacity: [0.85, 1, 0.92] }
+            : { scale: 1, opacity: 1 }
+        }
         transition={{
-          duration: entranceMs / 1000,
+          duration: ritualGlow ? RITUAL_MS / 1000 : entranceMs / 1000,
           ease: easeInOut,
         }}
       >
-        <ImmersiveCanvas presentCount={MOCK_PRESENT} />
+        <ImmersiveCanvas
+          presentCount={presentCount}
+          motionSpeed={canvasMotionSpeed}
+          pulseSpeed={canvasPulseSpeed}
+          syncFlashUntil={syncFlashUntil}
+        />
       </motion.div>
 
-      <motion.div
-        key={roomId ?? 'room'}
-        className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-6 pb-24 pt-16"
-        variants={staggerC}
-        initial={prefersReducedMotion ? false : 'hidden'}
-        animate="visible"
-      >
-        <motion.p
-          variants={staggerItem}
-          className={`text-center text-xs font-medium uppercase tracking-[0.2em] transition-opacity duration-500 ${chromeClass} ${
-            phase === 'focus' ? 'text-firefly' : 'text-aqua'
-          }`}
-        >
-          {phase === 'focus' ? 'Sessão de foco' : 'Pausa curta'}
-        </motion.p>
-
-        <motion.h1
-          variants={staggerItem}
-          className="mt-3 text-center text-lg font-normal text-secondary transition-opacity duration-500 sm:text-xl"
-        >
-          {title}
-        </motion.h1>
-
-        <motion.p
-          variants={staggerItem}
-          className={`mt-2 text-center text-sm text-secondary transition-opacity duration-500 ${chromeClass}`}
-        >
-          {MOCK_PRESENT} presentes
-        </motion.p>
-
-        <motion.p
-          variants={staggerItem}
-          className={`mt-14 font-mono text-6xl font-light tabular-nums tracking-tight sm:text-7xl md:text-8xl ${phase === 'focus' ? 'text-primary' : 'text-aqua'}`}
-        >
-          {formatTime(remaining)}
-        </motion.p>
-
+      {isActive && (
         <motion.div
-          variants={staggerBtnRow}
-          className={`mt-12 flex flex-wrap items-center justify-center gap-3 transition-opacity duration-500 ${chromeClass}`}
+          key={roomId ?? 'room'}
+          className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-6 pb-24 pt-16"
+          variants={staggerC}
+          initial={prefersReducedMotion ? false : 'hidden'}
+          animate="visible"
         >
-          <motion.div variants={staggerItem}>
+          <motion.p
+            variants={staggerItem}
+            className={`text-center text-xs font-medium uppercase tracking-[0.2em] transition-opacity duration-500 ${chromeClass} ${
+              phase === 'focus' ? 'text-firefly' : 'text-aqua'
+            }`}
+          >
+            {phase === 'focus' ? 'Sessão de foco' : 'Pausa curta'}
+          </motion.p>
+
+          <motion.h1
+            variants={staggerItem}
+            className="mt-3 text-center text-lg font-normal text-secondary transition-opacity duration-500 sm:text-xl"
+          >
+            {title}
+          </motion.h1>
+
+          <motion.p
+            variants={staggerItem}
+            className={`mt-2 text-center text-sm text-secondary transition-opacity duration-500 ${chromeClass}`}
+          >
+            {presentCount} presentes
+          </motion.p>
+
+          <motion.p
+            variants={staggerItem}
+            className={`mt-14 font-mono text-6xl font-light tabular-nums tracking-tight sm:text-7xl md:text-8xl ${phase === 'focus' ? 'text-primary' : 'text-aqua'}`}
+            initial={timerRitualFade ? { opacity: 0 } : false}
+            animate={{ opacity: 1 }}
+            transition={{ delay: timerRitualFade ? 0.3 : 0, duration: 0.6 }}
+          >
+            {formatTimerSeconds(remainingSeconds)}
+          </motion.p>
+        </motion.div>
+      )}
+
+      {sessionMode === 'onboarding' && (
+        <SessionOnboarding
+          title={title}
+          phase={phase}
+          remainingSeconds={remainingSeconds}
+          presentCount={presentCount}
+          prefersReducedMotion={prefersReducedMotion}
+          onJoinCurrent={() => setSessionMode('active')}
+          onWaitNext={() => setSessionMode('lounge')}
+        />
+      )}
+
+      {sessionMode === 'lounge' && (
+        <PreRoomLounge
+          secondsUntilNextFocus={secondsUntilNextFocus}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+      )}
+
+      {showChrome && (
+        <motion.div
+          role="toolbar"
+          aria-label="Ações da sala"
+          className={`pointer-events-none fixed left-0 right-0 top-0 z-20 flex items-start justify-between gap-3 p-4 transition-opacity duration-500 sm:p-6 ${chromeClass}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <Link
+            to="/painel"
+            className="pointer-events-auto rounded-lg px-3 py-2 text-sm text-secondary hover:bg-elevated hover:text-primary"
+          >
+            Sair
+          </Link>
+          <motion.div className="pointer-events-auto flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setRunning((r) => !r)}
-              className="pointer-events-auto rounded-xl bg-firefly px-6 py-3 text-sm font-medium text-night hover:brightness-110"
+              onClick={() => setSoundOpen((o) => !o)}
+              className="rounded-lg px-3 py-2 text-sm text-secondary hover:bg-elevated hover:text-primary"
+              aria-expanded={soundOpen}
             >
-              {running ? 'Pausar' : 'Iniciar'}
-            </button>
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <button
-              type="button"
-              onClick={reset}
-              className="pointer-events-auto rounded-xl border border-border px-6 py-3 text-sm font-medium text-primary hover:bg-elevated"
-            >
-              Resetar
+              Som
             </button>
           </motion.div>
         </motion.div>
-      </motion.div>
+      )}
 
-      <div
-        role="toolbar"
-        aria-label="Ações da sala"
-        className={`pointer-events-none fixed left-0 right-0 top-0 z-20 flex items-start justify-between gap-3 p-4 transition-opacity duration-500 sm:p-6 ${chromeClass}`}
-      >
-        <Link
-          to="/painel"
-          className="pointer-events-auto rounded-lg px-3 py-2 text-sm text-secondary hover:bg-elevated hover:text-primary"
-        >
-          Sair
-        </Link>
-        <div className="pointer-events-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSoundOpen((o) => !o)}
-            className="rounded-lg px-3 py-2 text-sm text-secondary hover:bg-elevated hover:text-primary"
-            aria-expanded={soundOpen}
-          >
-            Som
-          </button>
-        </div>
-      </div>
-
-      {soundOpen && (
+      {showChrome && soundOpen && (
         <div
           className="pointer-events-auto fixed right-4 top-14 z-30 w-[min(100%-2rem,20rem)] rounded-2xl border border-border bg-surface p-4 shadow-lg sm:right-6"
           role="dialog"
           aria-label="Configurar som ambiente"
         >
-          <div className="flex items-center justify-between gap-2">
+          <motion.div
+            className="flex items-center justify-between gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             <p className="text-sm font-medium text-primary">Ambiente</p>
             <button
               type="button"
@@ -240,7 +265,7 @@ export function RoomPage() {
             >
               {sound.isPlaying ? 'Pausar áudio' : 'Retomar'}
             </button>
-          </div>
+          </motion.div>
 
           <label className="mt-4 block text-xs text-secondary">
             Volume
@@ -313,6 +338,6 @@ export function RoomPage() {
           )}
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

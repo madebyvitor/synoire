@@ -61,9 +61,20 @@ function initStars(
 type ImmersiveCanvasProps = {
   /** Número de “presenças” mock — limitado internamente por performance */
   presentCount: number
+  /** Multiplicador de movimento (ex.: 0.35 na pré-sala) */
+  motionSpeed?: number
+  /** Velocidade do pulso individual (default 0.0025) */
+  pulseSpeed?: number
+  /** Timestamp até quando vagalumes pulsam em sincronia (ritual de ciclo) */
+  syncFlashUntil?: number
 }
 
-export function ImmersiveCanvas({ presentCount }: ImmersiveCanvasProps) {
+export function ImmersiveCanvas({
+  presentCount,
+  motionSpeed = 1,
+  pulseSpeed = 0.0025,
+  syncFlashUntil = 0,
+}: ImmersiveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const reduced = usePrefersReducedMotion()
   const firefliesRef = useRef<Firefly[]>([])
@@ -71,6 +82,13 @@ export function ImmersiveCanvas({ presentCount }: ImmersiveCanvasProps) {
     [],
   )
   const randRef = useRef(mulberry32(0x9e3779b9))
+  const motionSpeedRef = useRef(motionSpeed)
+  const pulseSpeedRef = useRef(pulseSpeed)
+  const syncFlashUntilRef = useRef(syncFlashUntil)
+
+  motionSpeedRef.current = motionSpeed
+  pulseSpeedRef.current = pulseSpeed
+  syncFlashUntilRef.current = syncFlashUntil
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -176,7 +194,10 @@ export function ImmersiveCanvas({ presentCount }: ImmersiveCanvasProps) {
       drawHorizon(w, h, t)
 
       const flies = firefliesRef.current
-      const speed = reduced ? 0.15 : 1
+      const speed = reduced ? 0.15 : motionSpeedRef.current
+      const syncUntil = syncFlashUntilRef.current
+      const inSyncFlash = syncUntil > 0 && now < syncUntil
+
       for (const f of flies) {
         f.x += f.vx * speed
         f.y += f.vy * speed
@@ -185,7 +206,10 @@ export function ImmersiveCanvas({ presentCount }: ImmersiveCanvasProps) {
         if (f.y < h * 0.5) f.y = h * 0.52
         if (f.y > h - 10) f.y = h - 12
 
-        const glow = 0.35 + 0.65 * Math.sin(f.phase + t * 0.0025 * f.pulse)
+        const glow = inSyncFlash
+          ? 0.9 + 0.1 * Math.sin(t * 0.008)
+          : 0.35 +
+            0.65 * Math.sin(f.phase + t * pulseSpeedRef.current * f.pulse)
         const r = 2 + glow * 2.2
         ctx.shadowColor = '#d8ff5e'
         ctx.shadowBlur = reduced ? 6 : 14 + glow * 10
