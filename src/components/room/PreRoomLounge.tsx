@@ -1,21 +1,46 @@
 import { motion } from 'motion/react'
-import { formatTimerSeconds } from '@/lib/roomTimer'
+import { formatTimerSeconds, type RoomPhase } from '@/lib/roomTimer'
 import {
   pageStaggerContainer,
   pageStaggerItem,
 } from '@/motion/pageStagger'
 
 type PreRoomLoungeProps = {
-  secondsUntilNextFocus: number
+  /** Remaining time in the current segment (prep, focus, or break). */
+  remainingSeconds: number
+  phase: RoomPhase
+  isPrep: boolean
   prefersReducedMotion: boolean
 }
 
+function loungeCopy(isPrep: boolean, phase: RoomPhase) {
+  if (isPrep) {
+    return {
+      subtitle: 'Preparando a mente para o próximo bloco de foco…',
+      countdownLabel: 'Ritual começa em',
+    }
+  }
+  if (phase === 'focus') {
+    return {
+      subtitle: 'Aguardando a pausa do ciclo em andamento…',
+      countdownLabel: 'Pausa começa em',
+    }
+  }
+  return {
+    subtitle: 'Aguardando o próximo bloco de foco…',
+    countdownLabel: 'Próximo foco começa em',
+  }
+}
+
 export function PreRoomLounge({
-  secondsUntilNextFocus,
+  remainingSeconds,
+  phase,
+  isPrep,
   prefersReducedMotion,
 }: PreRoomLoungeProps) {
   const staggerC = pageStaggerContainer(prefersReducedMotion)
   const staggerItem = pageStaggerItem(prefersReducedMotion)
+  const copy = loungeCopy(isPrep, phase)
 
   return (
     <motion.div
@@ -30,21 +55,21 @@ export function PreRoomLounge({
         variants={staggerItem}
         className="max-w-md text-center text-sm leading-relaxed text-secondary"
       >
-        Preparando a mente para o próximo bloco de foco…
+        {copy.subtitle}
       </motion.p>
       <motion.p
         variants={staggerItem}
         className="mt-10 text-center text-xs font-medium uppercase tracking-[0.18em] text-firefly/80"
         aria-live="polite"
       >
-        Próximo ciclo começa em
+        {copy.countdownLabel}
       </motion.p>
       <motion.p
         variants={staggerItem}
         className="mt-3 font-mono text-5xl font-light tabular-nums tracking-tight text-primary sm:text-6xl"
         aria-live="polite"
       >
-        {formatTimerSeconds(secondsUntilNextFocus)}
+        {formatTimerSeconds(remainingSeconds)}
       </motion.p>
     </motion.div>
   )

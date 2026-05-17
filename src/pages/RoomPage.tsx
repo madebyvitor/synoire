@@ -13,13 +13,16 @@ import { useStudyRoom } from '@/hooks/useStudyRoom'
 import { useRoomChat } from '@/hooks/useRoomChat'
 import { useRoomSoundscape } from '@/hooks/useRoomSoundscape'
 import { canSendRoomChat } from '@/lib/roomChat'
-import { formatTimerSeconds } from '@/lib/roomTimer'
+import { formatTimerSeconds, type RoomPhase } from '@/lib/roomTimer'
 import {
   pageStaggerContainer,
   pageStaggerItem,
 } from '@/motion/pageStagger'
 
 type SessionMode = 'onboarding' | 'lounge' | 'active'
+
+/** What the lounge is waiting for before auto-entering the room. */
+type LoungeWaitTarget = 'prep' | 'break' | 'focus'
 
 const RITUAL_MS = 2000
 
@@ -58,14 +61,7 @@ export function RoomPage() {
   const staggerItem = pageStaggerItem(prefersReducedMotion)
 
   const timer = useGlobalRoomTimer(roomId, studyRoom)
-  const {
-    phase,
-    remainingSeconds,
-    secondsUntilNextFocus,
-    presentCount,
-    isIdle,
-    startFocusTimer,
-  } = timer
+  const { phase, remainingSeconds, presentCount, isIdle, startFocusTimer } = timer
 
   const [sessionMode, setSessionMode] = useState<SessionMode>(() =>
     initialSessionMode(location.state),
@@ -80,6 +76,8 @@ export function RoomPage() {
   const idleTimerRef = useRef<number | null>(null)
   const prevPhaseRef = useRef(phase)
   const loungePromotedRef = useRef(false)
+  const loungeWaitTargetRef = useRef<LoungeWaitTarget | null>(null)
+  const loungeEnteredPhaseRef = useRef<RoomPhase | 'prep' | null>(null)
 
   const sound = useRoomSoundscape()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -142,7 +140,29 @@ export function RoomPage() {
 
   useEffect(() => {
     loungePromotedRef.current = false
+    if (sessionMode !== 'lounge') {
+      loungeWaitTargetRef.current = null
+      loungeEnteredPhaseRef.current = null
+    }
   }, [sessionMode])
+
+  useEffect(() => {
+    if (sessionMode !== 'lounge' || loungeWaitTargetRef.current !== null) return
+    if (isIdle) {
+      loungeWaitTargetRef.current = 'prep'
+      loungeEnteredPhaseRef.current = 'prep'
+    }
+  }, [sessionMode, isIdle])
+
+  const enterLounge = useCallback(
+    (target: LoungeWaitTarget) => {
+      loungeWaitTargetRef.current = target
+      loungeEnteredPhaseRef.current = isIdle ? 'prep' : phase
+      loungePromotedRef.current = false
+      setSessionMode('lounge')
+    },
+    [isIdle, phase],
+  )
 
   useEffect(() => {
     if (sessionMode !== 'active') return
@@ -152,18 +172,33 @@ export function RoomPage() {
 
   /** After 1 min prep, start focus even if user is not in lounge yet. */
   useEffect(() => {
-    if (!isIdle || secondsUntilNextFocus > 0) return
+    if (!isIdle || remainingSeconds > 0) return
     void startFocusTimer()
-  }, [isIdle, secondsUntilNextFocus, startFocusTimer])
+  }, [isIdle, remainingSeconds, startFocusTimer])
 
   useEffect(() => {
     if (sessionMode !== 'lounge') return
-    if (secondsUntilNextFocus > 0) return
     if (loungePromotedRef.current) return
+
+    const target = loungeWaitTargetRef.current
+    if (!target) return
+
+    const shouldEnter =
+      (target === 'prep' && isIdle && remainingSeconds === 0) ||
+      (target === 'break' &&
+        phase === 'break' &&
+        loungeEnteredPhaseRef.current === 'focus') ||
+      (target === 'focus' &&
+        phase === 'focus' &&
+        !isIdle &&
+        loungeEnteredPhaseRef.current === 'break')
+
+    if (!shouldEnter) return
+
     loungePromotedRef.current = true
     setSessionMode('active')
     playCycleStartRitual()
-  }, [sessionMode, secondsUntilNextFocus, playCycleStartRitual])
+  }, [sessionMode, isIdle, phase, remainingSeconds, playCycleStartRitual])
 
   useEffect(() => {
     if (sessionMode !== 'active') {
@@ -268,13 +303,19 @@ export function RoomPage() {
           onJoinCurrent={() => {
             setSessionMode('active')
           }}
-          onWaitNext={() => setSessionMode('lounge')}
+          onWaitNext={() => {
+            if (isIdle) enterLounge('prep')
+            else if (phase === 'focus') enterLounge('break')
+            else enterLounge('focus')
+          }}
         />
       )}
 
       {sessionMode === 'lounge' && (
         <PreRoomLounge
-          secondsUntilNextFocus={secondsUntilNextFocus}
+          remainingSeconds={remainingSeconds}
+          phase={phase}
+          isPrep={isIdle}
           prefersReducedMotion={prefersReducedMotion}
         />
       )}
