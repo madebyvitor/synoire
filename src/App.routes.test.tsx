@@ -33,6 +33,9 @@ describe('rotas (smoke, sem backend)', () => {
     expect(
       screen.getByRole('heading', { name: /hubs por concurso/i }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /não encontrou seu concurso/i }),
+    ).toBeInTheDocument()
   })
 
   it('renderiza detalhe de hub por slug', () => {

@@ -1,5 +1,7 @@
 import { motion } from 'motion/react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { HubRequestModal } from '@/components/hub/HubRequestModal'
 import { SAMPLE_HUBS } from '@/data/sampleHubs'
 import {
   pageStaggerContainer,
@@ -9,6 +11,7 @@ import {
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 export function HubsPage() {
+  const [requestOpen, setRequestOpen] = useState(false)
   const count = SAMPLE_HUBS.length
   const reduced = usePrefersReducedMotion()
   const c = pageStaggerContainer(reduced)
@@ -77,7 +80,22 @@ export function HubsPage() {
             </Link>
           </motion.li>
         ))}
+        <motion.li variants={item}>
+          <button
+            type="button"
+            onClick={() => setRequestOpen(true)}
+            className="flex h-full min-h-[8.5rem] w-full items-center justify-center rounded-2xl border border-dashed border-white/10 bg-transparent px-5 py-5 text-sm text-secondary transition hover:border-white/20 hover:text-primary"
+          >
+            + Não encontrou seu concurso?
+          </button>
+        </motion.li>
       </motion.ul>
+
+      <HubRequestModal
+        open={requestOpen}
+        onClose={() => setRequestOpen(false)}
+        prefersReducedMotion={reduced}
+      />
     </motion.div>
   )
 }
