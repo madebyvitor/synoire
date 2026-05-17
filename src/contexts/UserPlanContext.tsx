@@ -17,7 +17,8 @@ type UserPlanContextValue = {
   hasGlowAccess: boolean
   setPlanTier: (tier: PlanTier) => void
   paywallOpen: boolean
-  openPaywall: () => void
+  paywallMessage: string | null
+  openPaywall: (message?: string) => void
   closePaywall: () => void
 }
 
@@ -27,6 +28,7 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
   const [planTier, setPlanTierState] = useState<PlanTier>(() => readDevPlanTier() ?? 'free')
   const [isLoading, setIsLoading] = useState(true)
   const [paywallOpen, setPaywallOpen] = useState(false)
+  const [paywallMessage, setPaywallMessage] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -83,8 +85,14 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
     writeDevPlanTier(tier)
   }, [])
 
-  const openPaywall = useCallback(() => setPaywallOpen(true), [])
-  const closePaywall = useCallback(() => setPaywallOpen(false), [])
+  const openPaywall = useCallback((message?: string) => {
+    setPaywallMessage(message ?? null)
+    setPaywallOpen(true)
+  }, [])
+  const closePaywall = useCallback(() => {
+    setPaywallOpen(false)
+    setPaywallMessage(null)
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -93,10 +101,11 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
       hasGlowAccess: hasGlowAccess(planTier),
       setPlanTier,
       paywallOpen,
+      paywallMessage,
       openPaywall,
       closePaywall,
     }),
-    [planTier, isLoading, setPlanTier, paywallOpen, openPaywall, closePaywall],
+    [planTier, isLoading, setPlanTier, paywallOpen, paywallMessage, openPaywall, closePaywall],
   )
 
   return <UserPlanContext.Provider value={value}>{children}</UserPlanContext.Provider>

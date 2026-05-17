@@ -1,22 +1,73 @@
 import { motion } from 'motion/react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useMemo, useState } from 'react'
+import { CreatePrivateHubModal } from '@/components/hub/CreatePrivateHubModal'
+import { HubListCard } from '@/components/hub/HubListCard'
 import { HubRequestModal } from '@/components/hub/HubRequestModal'
+import { FireflyIcon } from '@/components/landing/FireflyIcon'
+import { LockIcon } from '@/components/premium/LockIcon'
+import { AppToast } from '@/components/ui/AppToast'
+import { useJoinedHubs } from '@/contexts/JoinedHubsContext'
+import { useUserPlan } from '@/contexts/UserPlanContext'
 import { SAMPLE_HUBS } from '@/data/sampleHubs'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import {
+  appendPrivateHub,
+  buildPrivateHub,
+  readPrivateHubs,
+} from '@/lib/privateHubs'
 import {
   pageStaggerContainer,
   pageStaggerItem,
   pageStaggerListInner,
 } from '@/motion/pageStagger'
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+
+const CREATE_DELAY_MS = 1000
+const TOAST_MESSAGE = 'Hub Privado criado com sucesso!'
 
 export function HubsPage() {
+  const { hasGlowAccess, openPaywall } = useUserPlan()
+  const { joinedSlugs, isJoined, joinHub, leaveHub } = useJoinedHubs()
   const [requestOpen, setRequestOpen] = useState(false)
-  const count = SAMPLE_HUBS.length
+  const [createPrivateOpen, setCreatePrivateOpen] = useState(false)
+  const [privateHubs, setPrivateHubs] = useState(() => readPrivateHubs())
+  const [toastVisible, setToastVisible] = useState(false)
+
+  const hubs = useMemo(() => [...SAMPLE_HUBS, ...privateHubs], [privateHubs])
+  const joinedHubs = useMemo(
+    () =>
+      joinedSlugs
+        .map((slug) => hubs.find((h) => h.slug === slug))
+        .filter((h): h is (typeof hubs)[number] => h !== undefined),
+    [joinedSlugs, hubs],
+  )
+  const count = hubs.length
   const reduced = usePrefersReducedMotion()
   const c = pageStaggerContainer(reduced)
   const item = pageStaggerItem(reduced)
   const listInner = pageStaggerListInner(reduced)
+
+  const handleCreatePrivateClick = useCallback(() => {
+    if (!hasGlowAccess) {
+      openPaywall()
+      return
+    }
+    setCreatePrivateOpen(true)
+  }, [hasGlowAccess, openPaywall])
+
+  const handleCreatePrivateHub = useCallback(
+    async (payload: { name: string; iconEmoji?: string }) => {
+      await new Promise((resolve) => setTimeout(resolve, CREATE_DELAY_MS))
+      const existingSlugs = [
+        ...SAMPLE_HUBS.map((h) => h.slug),
+        ...privateHubs.map((h) => h.slug),
+      ]
+      const hub = buildPrivateHub(payload.name, payload.iconEmoji, existingSlugs)
+      const next = appendPrivateHub(hub)
+      setPrivateHubs(next)
+      setToastVisible(true)
+    },
+    [privateHubs],
+  )
 
   return (
     <motion.div
@@ -39,45 +90,51 @@ export function HubsPage() {
           Cada hub agrupa salas e metas alinhadas ao edital — lista estática por
           enquanto.
         </p>
+        <button
+          type="button"
+          onClick={handleCreatePrivateClick}
+          className="mt-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-transparent px-4 py-2.5 text-sm text-secondary transition hover:border-firefly/25 hover:text-primary hover:shadow-[0_0_20px_-6px_rgba(216,255,94,0.15)]"
+        >
+          <LockIcon className="h-4 w-4 text-firefly/70" />
+          <FireflyIcon className="h-1.5 w-1.5" />
+          <span>+ Criar Hub Privado</span>
+        </button>
       </motion.header>
+
+      <motion.section variants={item} className="mb-10">
+        <h2 className="text-sm font-medium text-primary">Seus Ambientes de Foco</h2>
+        {joinedHubs.length === 0 ? (
+          <p className="mt-3 text-sm text-secondary">
+            Você ainda não selecionou seus concursos de foco.
+          </p>
+        ) : (
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {joinedHubs.map((hub) => (
+              <li key={`joined-${hub.slug}`}>
+                <HubListCard
+                  hub={hub}
+                  isJoined
+                  onJoin={() => joinHub(hub.slug)}
+                  onLeave={() => leaveHub(hub.slug)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </motion.section>
 
       <motion.ul
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         variants={listInner}
       >
-        {SAMPLE_HUBS.map((hub) => (
+        {hubs.map((hub) => (
           <motion.li key={hub.slug} variants={item}>
-            <Link
-              to={`/hubs/${hub.slug}`}
-              className="group relative block overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-elevated shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition hover:border-firefly/25 hover:shadow-[0_0_24px_-4px_rgba(216,255,94,0.12)]"
-            >
-              <div
-                className={`pointer-events-none absolute inset-y-0 left-0 w-1 ${hub.accentStripe}`}
-                aria-hidden
-              />
-              <div className="relative px-5 py-5 pl-6">
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-base font-semibold leading-snug text-primary">
-                    {hub.name}
-                  </h2>
-                  <span
-                    className={`shrink-0 rounded-md border px-2 py-1 text-xs font-semibold tracking-wide ${hub.accentBadge}`}
-                  >
-                    {hub.shortLabel}
-                  </span>
-                </div>
-                <p className="mt-2.5 text-sm text-secondary">Salas · Metas</p>
-                <div className="mt-6 flex items-center gap-2">
-                  <span
-                    className="h-2 w-2 shrink-0 rounded-full bg-firefly shadow-[0_0_8px_rgba(216,255,94,0.65)]"
-                    aria-hidden
-                  />
-                  <span className="text-[0.65rem] font-medium uppercase tracking-widest text-primary">
-                    Ativo
-                  </span>
-                </div>
-              </div>
-            </Link>
+            <HubListCard
+              hub={hub}
+              isJoined={isJoined(hub.slug)}
+              onJoin={() => joinHub(hub.slug)}
+              onLeave={() => leaveHub(hub.slug)}
+            />
           </motion.li>
         ))}
         <motion.li variants={item}>
@@ -95,6 +152,19 @@ export function HubsPage() {
         open={requestOpen}
         onClose={() => setRequestOpen(false)}
         prefersReducedMotion={reduced}
+      />
+
+      <CreatePrivateHubModal
+        open={createPrivateOpen}
+        onClose={() => setCreatePrivateOpen(false)}
+        onCreate={handleCreatePrivateHub}
+        prefersReducedMotion={reduced}
+      />
+
+      <AppToast
+        message={TOAST_MESSAGE}
+        visible={toastVisible}
+        onDismiss={() => setToastVisible(false)}
       />
     </motion.div>
   )

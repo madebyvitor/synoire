@@ -19,7 +19,7 @@ const BENEFITS = [
 ] as const
 
 export function GlowPaywallModal() {
-  const { paywallOpen, closePaywall, setPlanTier } = useUserPlan()
+  const { paywallOpen, paywallMessage, closePaywall, setPlanTier } = useUserPlan()
   const prefersReducedMotion = usePrefersReducedMotion()
   const staggerC = pageStaggerContainer(prefersReducedMotion)
   const staggerItem = pageStaggerItem(prefersReducedMotion)
@@ -87,6 +87,12 @@ export function GlowPaywallModal() {
             >
               Desperte seu foco absoluto. Assine o Synoire Glow.
             </motion.h2>
+
+            {paywallMessage && (
+              <motion.p variants={staggerItem} className="mt-3 text-sm leading-relaxed text-secondary">
+                {paywallMessage}
+              </motion.p>
+            )}
 
             <motion.ul variants={staggerItem} className="mt-6 list-none space-y-3 p-0">
               {BENEFITS.map((benefit) => (

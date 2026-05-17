@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CreateRoomModal } from '@/components/hub/CreateRoomModal'
 import { HubRoomList } from '@/components/hub/HubRoomList'
-import { SAMPLE_HUBS } from '@/data/sampleHubs'
+import { getHubBySlug } from '@/data/sampleHubs'
 import { useHubRooms } from '@/hooks/useHubRooms'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import {
@@ -14,7 +14,7 @@ import {
 export function HubDetailPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const hub = SAMPLE_HUBS.find((h) => h.slug === slug)
+  const hub = getHubBySlug(slug)
   const reduced = usePrefersReducedMotion()
   const c = pageStaggerContainer(reduced)
   const item = pageStaggerItem(reduced)
@@ -74,7 +74,14 @@ export function HubDetailPage() {
         </Link>
       </motion.div>
       <motion.header variants={item} className="mt-6">
-        <h1 className="text-2xl font-semibold text-primary">{hub.name}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold text-primary">{hub.name}</h1>
+          {hub.isPrivate && (
+            <span className="rounded-md border border-firefly/40 bg-firefly/10 px-2 py-0.5 text-xs font-semibold text-firefly">
+              Hub Privado
+            </span>
+          )}
+        </div>
         <p className="mt-2 text-sm text-secondary">
           Rituais de foco criados por estudantes neste hub. Salas vazias por mais
           de 24 horas somem da lista.

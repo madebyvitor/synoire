@@ -1,3 +1,5 @@
+import { readPrivateHubs } from '@/lib/privateHubs/storage'
+
 export type HubSummary = {
   slug: string
   name: string
@@ -6,6 +8,13 @@ export type HubSummary = {
   accentStripe: string
   /** Badge do acrônimo (cor alinhada à barra) */
   accentBadge: string
+  isPrivate?: boolean
+  iconEmoji?: string
+}
+
+export function getHubBySlug(slug: string | undefined): HubSummary | undefined {
+  if (!slug) return undefined
+  return SAMPLE_HUBS.find((h) => h.slug === slug) ?? readPrivateHubs().find((h) => h.slug === slug)
 }
 
 /** Hubs exemplo — futuramente virão do Supabase */
