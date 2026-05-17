@@ -1,18 +1,27 @@
 import { motion } from 'motion/react'
-import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { CreateRoomModal } from '@/components/hub/CreateRoomModal'
+import { HubRoomList } from '@/components/hub/HubRoomList'
 import { SAMPLE_HUBS } from '@/data/sampleHubs'
+import { useHubRooms } from '@/hooks/useHubRooms'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import {
   pageStaggerContainer,
   pageStaggerItem,
 } from '@/motion/pageStagger'
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 export function HubDetailPage() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const hub = SAMPLE_HUBS.find((h) => h.slug === slug)
   const reduced = usePrefersReducedMotion()
   const c = pageStaggerContainer(reduced)
   const item = pageStaggerItem(reduced)
+
+  const { rooms, isLoading, error, createRoom } = useHubRooms(slug)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!hub) {
     return (
@@ -34,6 +43,16 @@ export function HubDetailPage() {
     )
   }
 
+  const handleCreate = async (theme: string, focusCycle: Parameters<typeof createRoom>[1]) => {
+    setIsSubmitting(true)
+    try {
+      const room = await createRoom(theme, focusCycle)
+      navigate(`/salas/${room.id}`, { state: { sessionStart: 'lounge' } })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <motion.div
       key={slug}
@@ -53,16 +72,32 @@ export function HubDetailPage() {
       <motion.header variants={item} className="mt-6">
         <h1 className="text-2xl font-semibold text-primary">{hub.name}</h1>
         <p className="mt-2 text-sm text-secondary">
-          Salas ativas e metas do hub aparecerão aqui. Realtime para presença
-          será plugado no Supabase.
+          Rituais de foco criados por estudantes neste hub. Salas vazias por mais
+          de 24 horas somem da lista.
         </p>
       </motion.header>
-      <motion.div
-        variants={item}
-        className="mt-8 rounded-2xl border border-dashed border-border bg-surface/50 p-8 text-center text-sm text-secondary"
-      >
-        Lista de salas (placeholder)
-      </motion.div>
+
+      {error && (
+        <motion.p variants={item} className="mt-4 text-sm text-red-400" role="alert">
+          {error}
+        </motion.p>
+      )}
+
+      <HubRoomList
+        rooms={rooms}
+        isLoading={isLoading}
+        hubName={hub.name}
+        onOpenCreate={() => setCreateOpen(true)}
+        prefersReducedMotion={reduced}
+      />
+
+      <CreateRoomModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={handleCreate}
+        prefersReducedMotion={reduced}
+        isSubmitting={isSubmitting}
+      />
     </motion.div>
   )
 }

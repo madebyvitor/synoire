@@ -40,6 +40,7 @@ describe('rotas (smoke, sem backend)', () => {
     expect(
       screen.getByRole('heading', { name: /polícia federal/i }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /criar ritual/i })).toBeInTheDocument()
   })
 
   it('renderiza sala de estudo com onboarding de sessão', () => {

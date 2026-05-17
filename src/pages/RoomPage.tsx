@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { ImmersiveCanvas } from '@/components/room/ImmersiveCanvas'
 import { PreRoomLounge } from '@/components/room/PreRoomLounge'
 import { RoomChat, RoomChatToggleButton } from '@/components/room/RoomChat'
@@ -9,6 +9,7 @@ import { SAMPLE_HUBS } from '@/data/sampleHubs'
 import { DEFAULT_SOUNDSCAPES } from '@/data/defaultSoundscapes'
 import { useGlobalRoomTimer } from '@/hooks/useGlobalRoomTimer'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useStudyRoom } from '@/hooks/useStudyRoom'
 import { useRoomChat } from '@/hooks/useRoomChat'
 import { useRoomSoundscape } from '@/hooks/useRoomSoundscape'
 import { canSendRoomChat } from '@/lib/roomChat'
@@ -22,7 +23,12 @@ type SessionMode = 'onboarding' | 'lounge' | 'active'
 
 const RITUAL_MS = 2000
 
-function roomTitle(roomId: string | undefined) {
+type RoomLocationState = {
+  sessionStart?: SessionMode
+}
+
+function roomTitle(roomId: string | undefined, studyName: string | null) {
+  if (studyName) return studyName
   if (!roomId) return 'Sala de estudo'
   const hub = SAMPLE_HUBS.find((h) => h.slug === roomId)
   if (hub) return `Sala ${hub.name}`
@@ -31,17 +37,39 @@ function roomTitle(roomId: string | undefined) {
   return `Sala ${pretty.charAt(0).toUpperCase()}${pretty.slice(1)}`
 }
 
+function initialSessionMode(state: unknown): SessionMode {
+  const s = state as RoomLocationState | null
+  if (s?.sessionStart === 'lounge' || s?.sessionStart === 'active') {
+    return s.sessionStart
+  }
+  return 'onboarding'
+}
+
 export function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>()
-  const title = useMemo(() => roomTitle(roomId), [roomId])
+  const location = useLocation()
+  const { room: studyRoom } = useStudyRoom(roomId)
+  const title = useMemo(
+    () => roomTitle(roomId, studyRoom?.name ?? null),
+    [roomId, studyRoom?.name],
+  )
   const prefersReducedMotion = usePrefersReducedMotion()
   const staggerC = pageStaggerContainer(prefersReducedMotion)
   const staggerItem = pageStaggerItem(prefersReducedMotion)
 
-  const timer = useGlobalRoomTimer(roomId)
-  const { phase, remainingSeconds, secondsUntilNextFocus, presentCount } = timer
+  const timer = useGlobalRoomTimer(roomId, studyRoom)
+  const {
+    phase,
+    remainingSeconds,
+    secondsUntilNextFocus,
+    presentCount,
+    isIdle,
+    startFocusTimer,
+  } = timer
 
-  const [sessionMode, setSessionMode] = useState<SessionMode>('onboarding')
+  const [sessionMode, setSessionMode] = useState<SessionMode>(() =>
+    initialSessionMode(location.state),
+  )
   const [syncFlashUntil, setSyncFlashUntil] = useState(0)
   const [ritualGlow, setRitualGlow] = useState(false)
   const [timerRitualFade, setTimerRitualFade] = useState(false)
@@ -115,6 +143,18 @@ export function RoomPage() {
   useEffect(() => {
     loungePromotedRef.current = false
   }, [sessionMode])
+
+  useEffect(() => {
+    if (sessionMode !== 'active') return
+    if (!isIdle) return
+    void startFocusTimer()
+  }, [sessionMode, isIdle, startFocusTimer])
+
+  /** After 1 min prep, start focus even if user is not in lounge yet. */
+  useEffect(() => {
+    if (!isIdle || secondsUntilNextFocus > 0) return
+    void startFocusTimer()
+  }, [isIdle, secondsUntilNextFocus, startFocusTimer])
 
   useEffect(() => {
     if (sessionMode !== 'lounge') return
@@ -225,7 +265,9 @@ export function RoomPage() {
           remainingSeconds={remainingSeconds}
           presentCount={presentCount}
           prefersReducedMotion={prefersReducedMotion}
-          onJoinCurrent={() => setSessionMode('active')}
+          onJoinCurrent={() => {
+            setSessionMode('active')
+          }}
           onWaitNext={() => setSessionMode('lounge')}
         />
       )}
