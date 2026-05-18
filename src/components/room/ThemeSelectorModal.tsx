@@ -126,7 +126,7 @@ export function ThemeSelectorModal({
           onClick={handleClose}
         >
           <motion.div
-            className="pointer-events-auto flex max-h-[min(90dvh,36rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-firefly/20 bg-[#161C24] shadow-[0_0_24px_-4px_#D8FF5E40]"
+            className="pointer-events-auto flex max-h-[min(90dvh,36rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-firefly/20 bg-panel shadow-[0_0_24px_-4px_rgba(163,163,79,0.25)]"
             variants={staggerC}
             initial={prefersReducedMotion ? false : 'hidden'}
             animate="visible"
@@ -206,8 +206,7 @@ export function ThemeSelectorModal({
                               </span>
                               {theme.isPremium && (
                                 <span
-                                  className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#161C24]"
-                                  style={{ backgroundColor: '#D8FF5E' }}
+                                  className="rounded bg-firefly px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-night"
                                 >
                                   Glow
                                 </span>

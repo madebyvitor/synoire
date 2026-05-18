@@ -53,9 +53,9 @@ export function LandingHero() {
                 ? undefined
                 : {
                     boxShadow: [
-                      '0 0 0 0 rgba(216,255,94,0)',
-                      '0 0 28px 2px rgba(216,255,94,0.35)',
-                      '0 0 0 0 rgba(216,255,94,0)',
+                      '0 0 0 0 rgba(163,163,79,0)',
+                      '0 0 28px 2px rgba(163,163,79,0.35)',
+                      '0 0 0 0 rgba(163,163,79,0)',
                     ],
                   }
             }

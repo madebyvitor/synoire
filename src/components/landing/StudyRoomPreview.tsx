@@ -97,7 +97,7 @@ export function StudyRoomPreview({
       ref={rootRef}
       role="img"
       aria-label="Prévia da sala de estudo Synoire com timer Pomodoro, silhueta noturna e vaga-lumes"
-      className={`relative overflow-hidden rounded-2xl border border-border bg-night shadow-[0_0_0_1px_rgba(0,0,0,0.2),0_24px_48px_-12px_rgba(0,0,0,0.55),0_0_40px_-8px_rgba(216,255,94,0.08)] ${heightClass} ${className}`}
+      className={`relative overflow-hidden rounded-2xl border border-border bg-night shadow-[0_0_0_1px_rgba(0,0,0,0.2),0_24px_48px_-12px_rgba(0,0,0,0.55),0_0_40px_-8px_rgba(163,163,79,0.08)] ${heightClass} ${className}`}
       animate={reduced ? undefined : { y: [0, -6, 0] }}
       transition={
         reduced

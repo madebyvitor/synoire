@@ -17,7 +17,7 @@ function loungeCopy(isPrep: boolean, phase: RoomPhase) {
   if (isPrep) {
     return {
       subtitle: 'Preparando a mente para o próximo bloco de foco…',
-      countdownLabel: 'Ritual começa em',
+      countdownLabel: 'Sala começa em',
     }
   }
   if (phase === 'focus') {

@@ -66,7 +66,7 @@ export function LandingSolution() {
             <motion.li
               key={f.title}
               variants={item}
-              className="rounded-2xl border border-border bg-gradient-to-br from-surface to-elevated p-6 transition hover:border-firefly/25 hover:shadow-[0_0_24px_-4px_rgba(216,255,94,0.12)]"
+              className="rounded-2xl border border-border bg-gradient-to-br from-surface to-elevated p-6 transition hover:border-firefly/25 hover:shadow-[0_0_24px_-4px_rgba(163,163,79,0.12)]"
             >
               <h3 className="text-base font-semibold text-primary">{f.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-secondary">

@@ -99,7 +99,7 @@ export function ProfilePage() {
         className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-elevated shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
       >
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-firefly shadow-[0_0_24px_rgba(216,255,94,0.35)]"
+          className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-firefly shadow-[0_0_24px_rgba(163,163,79,0.35)]"
           aria-hidden
         />
         <LightningWatermark className="pointer-events-none absolute right-5 top-5 h-9 w-9 text-firefly/[0.12]" />
@@ -126,7 +126,7 @@ export function ProfilePage() {
                   }}
                 />
               )}
-              <div className="relative flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full bg-gradient-to-br from-firefly to-aqua text-lg font-bold tracking-tight text-night shadow-[0_0_0_3px_rgba(216,255,94,0.35),0_0_28px_rgba(216,255,94,0.2)]">
+              <div className="relative flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full bg-gradient-to-br from-firefly to-aqua text-lg font-bold tracking-tight text-night shadow-[0_0_0_3px_rgba(163,163,79,0.35),0_0_28px_rgba(163,163,79,0.2)]">
                 {initials}
               </div>
             </div>

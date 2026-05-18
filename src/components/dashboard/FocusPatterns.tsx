@@ -22,7 +22,7 @@ export function FocusPatterns() {
   const { chartData, peakBlock, peakLabel, boostPercent } = stats
 
   return (
-    <section className="rounded-2xl border border-white/5 bg-[#161C24] p-6">
+    <section className="rounded-2xl border border-white/5 bg-panel p-6">
       <h2 className="text-sm font-medium text-primary">Inteligência de Foco</h2>
       <GlowLockedOverlay className="mt-4">
         <p className="text-sm leading-relaxed text-secondary">
@@ -47,7 +47,7 @@ export function FocusPatterns() {
                 {chartData.map((entry) => (
                   <Cell
                     key={entry.block}
-                    fill={entry.block === peakBlock ? '#D8FF5E' : '#A4AFBD'}
+                    fill={entry.block === peakBlock ? '#a3a34f' : '#5a5a4a'}
                   />
                 ))}
               </Bar>

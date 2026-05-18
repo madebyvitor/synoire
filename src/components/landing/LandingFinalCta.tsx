@@ -15,7 +15,7 @@ export function LandingFinalCta() {
   return (
     <Section id="comecar" className="relative overflow-hidden border-t border-border/50">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(216,255,94,0.09)_0%,transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(163,163,79,0.09)_0%,transparent_55%)]"
         aria-hidden
       />
 

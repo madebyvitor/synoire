@@ -53,7 +53,7 @@ function OnlinePartnerRow({
         <button
           type="button"
           onClick={() => onJoinRoom(partner.currentRoomId!)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-firefly/30 bg-[#161C24]/95 px-2.5 py-1.5 text-[11px] font-medium text-firefly opacity-0 shadow-sm transition group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-firefly/50"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-firefly/30 bg-panel/95 px-2.5 py-1.5 text-[11px] font-medium text-firefly opacity-0 shadow-sm transition group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-firefly/50"
         >
           Entrar na Sala
         </button>
@@ -214,7 +214,7 @@ export function StudyPartnersSidebar({
           <motion.aside
             role="dialog"
             aria-label="Parceiros de estudo"
-            className="pointer-events-auto fixed bottom-0 right-0 top-0 z-40 flex w-[min(100%,22rem)] flex-col border-l border-white/5 bg-[#161C24] shadow-xl"
+            className="pointer-events-auto fixed bottom-0 right-0 top-0 z-40 flex w-[min(100%,22rem)] flex-col border-l border-white/5 bg-panel shadow-xl"
             {...slide}
             transition={{ duration: prefersReducedMotion ? 0 : 0.28, ease: [0.42, 0, 0.58, 1] }}
           >

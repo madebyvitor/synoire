@@ -1,15 +1,14 @@
 import { useEffect, useId, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { StudyPartnersSidebar } from '@/components/dashboard/StudyPartnersSidebar'
+import { AppAtmosphere } from '@/components/layout/AppAtmosphere'
 import { useStudyPartners } from '@/contexts/StudyPartnersContext'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   [
-    'rounded-lg px-3 py-2 text-sm transition-colors',
-    isActive
-      ? 'bg-firefly-dim text-firefly'
-      : 'text-secondary hover:bg-elevated hover:text-primary',
+    'flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors',
+    isActive ? 'text-firefly' : 'text-secondary hover:text-primary',
   ].join(' ')
 
 const NAV_LINKS_BEFORE_PARTNERS: readonly { to: string; label: string; end?: boolean }[] = [
@@ -38,7 +37,16 @@ function ShellNavItems({
     <>
       {NAV_LINKS_BEFORE_PARTNERS.map(({ to, label, end }) => (
         <NavLink key={to} to={to} end={end} className={navClass} {...linkExtra}>
-          {label}
+          {({ isActive }) => (
+            <>
+              <span>{label}</span>
+              {isActive && (
+                <span className="text-firefly/80" aria-hidden>
+                  ›
+                </span>
+              )}
+            </>
+          )}
         </NavLink>
       ))}
       <PartnersNavButton
@@ -48,7 +56,16 @@ function ShellNavItems({
       />
       {NAV_LINKS_AFTER_PARTNERS.map(({ to, label, end }) => (
         <NavLink key={to} to={to} end={end} className={navClass} {...linkExtra}>
-          {label}
+          {({ isActive }) => (
+            <>
+              <span>{label}</span>
+              {isActive && (
+                <span className="text-firefly/80" aria-hidden>
+                  ›
+                </span>
+              )}
+            </>
+          )}
         </NavLink>
       ))}
     </>
@@ -95,13 +112,16 @@ function PartnersNavButton({
       onClick={onClick}
       aria-expanded={isOpen}
       className={[
-        'relative w-full rounded-lg px-3 py-2 text-left text-sm transition-colors',
-        isOpen
-          ? 'bg-firefly-dim text-firefly'
-          : 'text-secondary hover:bg-elevated hover:text-primary',
+        'relative flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors',
+        isOpen ? 'text-firefly' : 'text-secondary hover:text-primary',
       ].join(' ')}
     >
-      Parceiros
+      <span>Parceiros</span>
+      {isOpen && (
+        <span className="text-firefly/80" aria-hidden>
+          ›
+        </span>
+      )}
       {pendingCount > 0 && (
         <span className="absolute right-2 top-1/2 flex h-4 min-w-4 -translate-y-1/2 items-center justify-center rounded-full bg-firefly/20 px-1 text-[10px] font-medium tabular-nums text-firefly">
           {pendingCount}
@@ -161,9 +181,10 @@ export function AppShell() {
   }, [])
 
   return (
-    <div className="flex min-h-dvh flex-col min-[770px]:flex-row">
+    <div className="app-noise relative flex min-h-dvh flex-col min-[770px]:flex-row">
+      <AppAtmosphere intensity="subtle" />
       {/* Barra + menu sanduíche: 320px–769px */}
-      <header className="sticky top-0 z-50 flex min-[770px]:hidden items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
+      <header className="relative z-20 sticky top-0 flex min-[770px]:hidden items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 py-3 backdrop-blur-sm">
         <button
           type="button"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-elevated text-primary transition hover:border-firefly/40 hover:bg-surface"
@@ -222,7 +243,7 @@ export function AppShell() {
         </>
       )}
 
-      <aside className="hidden min-[770px]:flex w-56 shrink-0 flex-col border-r border-border bg-surface px-3 py-6">
+      <aside className="relative z-20 hidden min-[770px]:flex w-56 shrink-0 flex-col border-r border-border bg-night/40 px-3 py-6 backdrop-blur-sm">
         <div className="mb-8 px-2">
           <NavLink
             to="/"
@@ -252,7 +273,7 @@ export function AppShell() {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 bg-night p-6 md:p-10">
+      <main className="relative z-10 min-w-0 flex-1 p-6 md:p-10">
         <Outlet />
       </main>
 

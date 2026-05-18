@@ -33,7 +33,7 @@ describe('rotas (smoke, sem backend)', () => {
 
   it('renderiza o painel dentro do shell', () => {
     renderAt('/painel')
-    expect(screen.getByRole('heading', { name: /^painel$/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /painel/i })).toBeInTheDocument()
     expect(screen.getByRole('navigation')).toBeInTheDocument()
   })
 
@@ -52,7 +52,7 @@ describe('rotas (smoke, sem backend)', () => {
     expect(
       screen.getByRole('heading', { name: /polícia federal/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /criar ritual/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /criar sala/i })).toBeInTheDocument()
   })
 
   it('renderiza sala de estudo com onboarding de sessão', () => {

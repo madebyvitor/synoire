@@ -83,7 +83,7 @@ export function HubDetailPage() {
           )}
         </div>
         <p className="mt-2 text-sm text-secondary">
-          Rituais de foco criados por estudantes neste hub. Salas vazias por mais
+          Salas de foco criadas por estudantes neste hub. Salas vazias por mais
           de 24 horas somem da lista.
         </p>
       </motion.header>

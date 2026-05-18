@@ -22,14 +22,14 @@ export function HubRoomCard({ room }: HubRoomCardProps) {
 
   return (
     <motion.article
-      className="group relative rounded-2xl border border-white/5 bg-[#161C24] p-5 transition hover:border-white/10"
+      className="group relative rounded-2xl border border-white/5 bg-panel p-5 transition hover:border-white/10"
       whileHover={reduced ? undefined : { y: -2 }}
     >
       <h3 className="text-base font-semibold leading-snug text-primary">{room.name}</h3>
 
       <div className="mt-3 flex items-center gap-2 text-sm text-secondary">
         <span
-          className={`inline-block h-2 w-2 shrink-0 rounded-full bg-firefly shadow-[0_0_8px_rgba(216,255,94,0.65)] ${reduced ? '' : 'landing-firefly'}`}
+          className={`inline-block h-2 w-2 shrink-0 rounded-full bg-firefly shadow-[0_0_8px_rgba(163,163,79,0.65)] ${reduced ? '' : 'landing-firefly'}`}
           aria-hidden
         />
         <span>

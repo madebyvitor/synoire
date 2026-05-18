@@ -73,7 +73,7 @@ export function GlowPaywallModal() {
           onClick={closePaywall}
         >
           <motion.div
-            className="pointer-events-auto w-full max-w-md rounded-2xl border border-firefly/30 bg-[#161C24] p-6 shadow-[0_0_24px_-4px_#D8FF5E40]"
+            className="pointer-events-auto w-full max-w-md rounded-2xl border border-firefly/30 bg-panel p-6 shadow-[0_0_24px_-4px_rgba(163,163,79,0.25)]"
             variants={staggerC}
             initial={prefersReducedMotion ? false : 'hidden'}
             animate="visible"

@@ -34,7 +34,7 @@ export function LandingFeaturesGrid() {
           <motion.li
             key={label}
             variants={item}
-            className="rounded-2xl border border-border bg-surface px-5 py-6 text-sm font-medium text-primary transition hover:border-firefly/25 hover:shadow-[0_0_20px_-6px_rgba(216,255,94,0.1)]"
+            className="rounded-2xl border border-border bg-surface px-5 py-6 text-sm font-medium text-primary transition hover:border-firefly/25 hover:shadow-[0_0_20px_-6px_rgba(163,163,79,0.1)]"
           >
             {label}
           </motion.li>

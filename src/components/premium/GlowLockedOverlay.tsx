@@ -20,7 +20,7 @@ export function GlowLockedOverlay({ children, className = '' }: GlowLockedOverla
         <button
           type="button"
           onClick={() => openPaywall()}
-          className="pointer-events-auto flex items-center gap-2 rounded-xl border border-firefly/30 bg-[#161C24]/90 px-4 py-2.5 text-sm font-medium text-firefly shadow-[0_0_24px_-4px_#D8FF5E40] transition hover:border-firefly/50 hover:brightness-110"
+          className="pointer-events-auto flex items-center gap-2 rounded-xl border border-firefly/30 bg-panel/90 px-4 py-2.5 text-sm font-medium text-firefly shadow-[0_0_24px_-4px_rgba(163,163,79,0.25)] transition hover:border-firefly/50 hover:brightness-110"
         >
           <LockIcon className="h-4 w-4 text-firefly" />
           Desbloquear Inteligência Glow

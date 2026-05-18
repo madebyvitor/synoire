@@ -27,7 +27,7 @@ export function buildPrivateHub(
     slug,
     name: name.trim(),
     shortLabel: 'Privado',
-    accentStripe: 'bg-firefly shadow-[0_0_16px_rgba(216,255,94,0.3)]',
+    accentStripe: 'bg-firefly shadow-[0_0_16px_rgba(163,163,79,0.3)]',
     accentBadge: 'border-firefly/40 bg-firefly/10 text-firefly',
     isPrivate: true,
     iconEmoji,

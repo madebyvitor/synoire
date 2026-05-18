@@ -32,7 +32,7 @@ export function AppToast({
           exit={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.2 }}
         >
-          <p className="rounded-xl border border-firefly/30 bg-[#161C24] px-5 py-3 text-sm font-medium text-primary shadow-[0_0_24px_-4px_#D8FF5E40]">
+          <p className="rounded-xl border border-firefly/30 bg-panel px-5 py-3 text-sm font-medium text-primary shadow-[0_0_24px_-4px_rgba(163,163,79,0.25)]">
             {message}
           </p>
         </motion.div>

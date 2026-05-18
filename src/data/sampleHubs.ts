@@ -23,7 +23,7 @@ export const SAMPLE_HUBS: HubSummary[] = [
     slug: 'pf',
     name: 'Polícia Federal',
     shortLabel: 'PF',
-    accentStripe: 'bg-firefly shadow-[0_0_16px_rgba(216,255,94,0.3)]',
+    accentStripe: 'bg-firefly shadow-[0_0_16px_rgba(163,163,79,0.3)]',
     accentBadge: 'border-firefly/40 bg-firefly/10 text-firefly',
   },
   {
@@ -52,7 +52,7 @@ export const SAMPLE_HUBS: HubSummary[] = [
     slug: 'rfb',
     name: 'Receita Federal',
     shortLabel: 'RFB',
-    accentStripe: 'bg-firefly shadow-[0_0_16px_rgba(216,255,94,0.3)]',
+    accentStripe: 'bg-firefly shadow-[0_0_16px_rgba(163,163,79,0.3)]',
     accentBadge: 'border-firefly/40 bg-firefly/10 text-firefly',
   },
 ]

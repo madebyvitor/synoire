@@ -33,14 +33,14 @@ export function HubRoomList({
         className="flex flex-wrap items-center justify-between gap-3"
       >
         <h2 className="text-sm font-medium uppercase tracking-wider text-secondary">
-          Rituais ativos
+          Salas ativas
         </h2>
         <button
           type="button"
           onClick={onOpenCreate}
           className="rounded-xl border border-firefly/30 bg-firefly/10 px-4 py-2 text-sm font-medium text-firefly transition hover:border-firefly/50 hover:bg-firefly/15"
         >
-          + Criar ritual
+          + Criar sala
         </button>
       </motion.div>
 
@@ -54,7 +54,7 @@ export function HubRoomList({
           className="mt-6 rounded-2xl border border-dashed border-border bg-surface/50 px-6 py-12 text-center"
         >
           <p className="text-sm text-secondary">
-            Nenhum ritual ativo em {hubName} ainda.
+            Nenhuma sala ativa em {hubName} ainda.
           </p>
           <p className="mt-2 text-xs text-secondary/80">
             Crie uma sala e comece um ciclo de foco com quem estiver online.

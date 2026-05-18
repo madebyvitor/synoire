@@ -80,8 +80,8 @@ function GoalRow({ goal }: GoalRowProps) {
         aria-label={`Progresso em ${goal.hubName}`}
       >
         <div
-          className={`h-full rounded-sm bg-[#D8FF5E] ${
-            complete ? 'shadow-[0_0_10px_#D8FF5E]' : ''
+          className={`h-full rounded-sm bg-firefly ${
+            complete ? 'shadow-[0_0_10px_#a3a34f]' : ''
           }`}
           style={{ width: `${pct}%` }}
         />
@@ -116,7 +116,7 @@ export function EvolutionTrails() {
   const dismissToast = useCallback(() => setToastVisible(false), [])
 
   return (
-    <section className="rounded-2xl border border-white/5 bg-[#161C24] p-6">
+    <section className="rounded-2xl border border-white/5 bg-panel p-6">
       {hasGlowAccess ? (
         <TrailsContent
           goals={displayGoals}
@@ -132,7 +132,7 @@ export function EvolutionTrails() {
             <button
               type="button"
               onClick={() => openPaywall()}
-              className="pointer-events-auto flex items-center gap-2 rounded-xl border border-firefly/30 bg-[#161C24]/90 px-4 py-2.5 text-sm font-medium text-firefly shadow-[0_0_24px_-4px_#D8FF5E40] transition hover:border-firefly/50 hover:brightness-110"
+              className="pointer-events-auto flex items-center gap-2 rounded-xl border border-firefly/30 bg-panel/90 px-4 py-2.5 text-sm font-medium text-firefly shadow-[0_0_24px_-4px_rgba(163,163,79,0.25)] transition hover:border-firefly/50 hover:brightness-110"
             >
               <LockIcon className="h-4 w-4 text-firefly" />
               Desbloquear Trilhas de Evolução

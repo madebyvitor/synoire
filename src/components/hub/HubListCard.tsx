@@ -12,7 +12,7 @@ type HubListCardProps = {
 export function HubListCard({ hub, isJoined, onJoin, onLeave }: HubListCardProps) {
   return (
     <article
-      className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-surface to-elevated shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition hover:shadow-[0_0_24px_-4px_rgba(216,255,94,0.12)] ${
+      className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-surface to-elevated shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition hover:shadow-[0_0_24px_-4px_rgba(163,163,79,0.12)] ${
         hub.isPrivate
           ? 'border-firefly/20 hover:border-firefly/30'
           : 'border-border hover:border-firefly/25'
@@ -50,7 +50,7 @@ export function HubListCard({ hub, isJoined, onJoin, onLeave }: HubListCardProps
         <p className="mt-2.5 text-sm text-secondary">Salas · Metas</p>
         <div className="mt-6 flex items-center gap-2">
           <span
-            className="h-2 w-2 shrink-0 rounded-full bg-firefly shadow-[0_0_8px_rgba(216,255,94,0.65)]"
+            className="h-2 w-2 shrink-0 rounded-full bg-firefly shadow-[0_0_8px_rgba(163,163,79,0.65)]"
             aria-hidden
           />
           <span className="text-[0.65rem] font-medium uppercase tracking-widest text-primary">

@@ -97,7 +97,7 @@ export function CreateRoomModal({
       onClick={onClose}
     >
       <motion.form
-        className="pointer-events-auto w-full max-w-md rounded-2xl border border-white/10 bg-[#161C24] p-6 shadow-xl"
+        className="pointer-events-auto w-full max-w-md rounded-2xl border border-white/10 bg-panel p-6 shadow-xl"
         variants={staggerC}
         initial={prefersReducedMotion ? false : 'hidden'}
         animate="visible"

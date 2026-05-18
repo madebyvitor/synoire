@@ -93,7 +93,7 @@ export function HubsPage() {
         <button
           type="button"
           onClick={handleCreatePrivateClick}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-transparent px-4 py-2.5 text-sm text-secondary transition hover:border-firefly/25 hover:text-primary hover:shadow-[0_0_20px_-6px_rgba(216,255,94,0.15)]"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-transparent px-4 py-2.5 text-sm text-secondary transition hover:border-firefly/25 hover:text-primary hover:shadow-[0_0_20px_-6px_rgba(163,163,79,0.15)]"
         >
           <LockIcon className="h-4 w-4 text-firefly/70" />
           <FireflyIcon className="h-1.5 w-1.5" />

@@ -75,7 +75,7 @@ export function InvitePartnersModal({
             onClick={handleClose}
           >
             <motion.div
-              className="pointer-events-auto flex max-h-[min(85dvh,28rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#161C24] shadow-[0_0_24px_-4px_#D8FF5E40]"
+              className="pointer-events-auto flex max-h-[min(85dvh,28rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/5 bg-panel shadow-[0_0_24px_-4px_rgba(163,163,79,0.25)]"
               variants={staggerC}
               initial={prefersReducedMotion ? false : 'hidden'}
               animate="visible"
