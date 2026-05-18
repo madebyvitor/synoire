@@ -14,7 +14,7 @@ export type RoomChatMessage = {
 
 export type RoomChatAdapter = {
   fetchRecent(roomId: string, limit?: number): Promise<RoomChatMessage[]>
-  send(roomId: string, content: string): Promise<RoomChatMessage>
+  send(roomId: string, content: string, userId: string): Promise<RoomChatMessage>
   subscribe(roomId: string, onInsert: (msg: RoomChatMessage) => void): () => void
 }
 

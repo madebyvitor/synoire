@@ -1,7 +1,7 @@
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import { mockRoomChatAdapter } from './mockRoomChatAdapter'
 import type { RoomChatAdapter, RoomChatMessage } from './types'
-import { DEMO_USER_ID, ROOM_CHAT_FETCH_LIMIT } from './types'
+import { ROOM_CHAT_FETCH_LIMIT } from './types'
 
 type ProfileSnippet = { username: string; avatar_url: string | null }
 
@@ -37,14 +37,6 @@ function mapRow(row: MessageRow): RoomChatMessage {
   }
 }
 
-async function requireUserId(): Promise<string> {
-  const supabase = getSupabase()
-  if (!supabase) throw new Error('Supabase not configured')
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data.user) throw new Error('Not authenticated')
-  return data.user.id
-}
-
 export const supabaseRoomChatAdapter: RoomChatAdapter = {
   async fetchRecent(roomId, limit = ROOM_CHAT_FETCH_LIMIT) {
     const supabase = getSupabase()
@@ -52,7 +44,7 @@ export const supabaseRoomChatAdapter: RoomChatAdapter = {
 
     const { data, error } = await supabase
       .from('messages')
-      .select('id, room_id, user_id, content, created_at, profiles(username, avatar_url)')
+      .select('*, profiles(username, avatar_url)')
       .eq('room_id', roomId)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -66,18 +58,18 @@ export const supabaseRoomChatAdapter: RoomChatAdapter = {
     return rows.map(mapRow).reverse()
   },
 
-  async send(roomId, content) {
+  async send(roomId, content, userId) {
     const supabase = getSupabase()
     if (!supabase) throw new Error('Supabase not configured')
+    if (!userId) throw new Error('Not authenticated')
 
-    const userId = await requireUserId()
     const trimmed = content.trim()
     if (!trimmed) throw new Error('Empty message')
 
     const { data, error } = await supabase
       .from('messages')
       .insert({ room_id: roomId, user_id: userId, content: trimmed })
-      .select('id, room_id, user_id, content, created_at, profiles(username, avatar_url)')
+      .select('*, profiles(username, avatar_url)')
       .single()
 
     if (error || !data) {
@@ -132,16 +124,4 @@ export function getRoomChatAdapter(): RoomChatAdapter {
     return supabaseRoomChatAdapter
   }
   return mockRoomChatAdapter
-}
-
-/** Resolved user id for unread logic (mock vs Supabase auth). */
-export async function resolveCurrentChatUserId(): Promise<string> {
-  const demoMode = import.meta.env.VITE_DEMO_MODE === 'true'
-  if (!isSupabaseConfigured || demoMode) {
-    return DEMO_USER_ID
-  }
-  const supabase = getSupabase()
-  if (!supabase) return ''
-  const { data } = await supabase.auth.getUser()
-  return data.user?.id ?? ''
 }

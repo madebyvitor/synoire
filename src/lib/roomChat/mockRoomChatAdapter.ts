@@ -96,14 +96,14 @@ export const mockRoomChatAdapter: RoomChatAdapter = {
       .reverse()
   },
 
-  async send(roomId, content) {
+  async send(roomId, content, userId) {
     const trimmed = content.trim()
     if (!trimmed) throw new Error('Empty message')
 
     const message: RoomChatMessage = {
       id: createId(),
       room_id: roomId,
-      user_id: DEMO_USER_ID,
+      user_id: userId || DEMO_USER_ID,
       content: trimmed,
       created_at: new Date().toISOString(),
       author: { username: 'você', avatar_url: null },

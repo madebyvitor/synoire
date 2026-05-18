@@ -6,11 +6,7 @@ export {
   ROOM_CHAT_MAX_LENGTH,
 } from './types'
 export { mockRoomChatAdapter } from './mockRoomChatAdapter'
-export {
-  getRoomChatAdapter,
-  resolveCurrentChatUserId,
-  supabaseRoomChatAdapter,
-} from './supabaseRoomChatAdapter'
+export { getRoomChatAdapter, supabaseRoomChatAdapter } from './supabaseRoomChatAdapter'
 export {
   appendMessageIfNew,
   canSendRoomChat,

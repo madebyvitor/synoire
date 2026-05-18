@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { isDemoMode } from '@/lib/hubRooms/demo'
 import {
   appendMessageIfNew,
+  DEMO_USER_ID,
   getRoomChatAdapter,
   isValidChatContent,
-  resolveCurrentChatUserId,
   ROOM_CHAT_FETCH_LIMIT,
   sortMessagesAsc,
   trimChatContent,
   type RoomChatMessage,
 } from '@/lib/roomChat'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 type UseRoomChatOptions = {
   roomId: string | undefined
@@ -16,16 +19,23 @@ type UseRoomChatOptions = {
   enabled?: boolean
 }
 
+const usesSupabaseChat = isSupabaseConfigured && !isDemoMode
+
 export function useRoomChat({
   roomId,
   panelOpen,
   enabled = true,
 }: UseRoomChatOptions) {
+  const { user } = useAuth()
   const [messages, setMessages] = useState<RoomChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [currentUserId, setCurrentUserId] = useState('')
+
+  const currentUserId = useMemo(
+    () => (usesSupabaseChat ? (user?.id ?? '') : DEMO_USER_ID),
+    [user?.id],
+  )
 
   const adapterRef = useRef(getRoomChatAdapter())
   const panelOpenRef = useRef(panelOpen)
@@ -42,17 +52,6 @@ export function useRoomChat({
       setUnreadCount((c) => c + 1)
     }
   }, [])
-
-  useEffect(() => {
-    if (!enabled) return
-    let cancelled = false
-    void resolveCurrentChatUserId().then((id) => {
-      if (!cancelled) setCurrentUserId(id)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [enabled])
 
   useEffect(() => {
     if (!enabled || !roomId) {
@@ -91,9 +90,12 @@ export function useRoomChat({
       const content = trimChatContent(raw)
       if (!isValidChatContent(content)) return false
 
+      const userId = usesSupabaseChat ? user?.id : DEMO_USER_ID
+      if (!userId) return false
+
       setSending(true)
       try {
-        const msg = await adapterRef.current.send(roomId, content)
+        const msg = await adapterRef.current.send(roomId, content, userId)
         setMessages((prev) => appendMessageIfNew(prev, msg))
         return true
       } catch (err) {
@@ -103,7 +105,7 @@ export function useRoomChat({
         setSending(false)
       }
     },
-    [roomId],
+    [roomId, user?.id],
   )
 
   return {

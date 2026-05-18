@@ -87,7 +87,7 @@ describe('mockRoomChatAdapter', () => {
     const msgs = await mockRoomChatAdapter.fetchRecent(roomId)
     expect(msgs.length).toBe(0)
 
-    await mockRoomChatAdapter.send(roomId, 'test message')
+    await mockRoomChatAdapter.send(roomId, 'test message', 'demo-local-user')
     const after = await mockRoomChatAdapter.fetchRecent(roomId)
     expect(after.some((m) => m.content === 'test message')).toBe(true)
   })
