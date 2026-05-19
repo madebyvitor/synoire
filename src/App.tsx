@@ -3,6 +3,7 @@ import { RequireAuth } from '@/components/auth/RequireAuth'
 import { GlowPaywallModal } from '@/components/premium/GlowPaywallModal'
 import { AppShell } from '@/components/layout/AppShell'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { GlobalPresenceProvider } from '@/contexts/GlobalPresenceContext'
 import { HubsProvider } from '@/contexts/HubsContext'
 import { JoinedHubsProvider } from '@/contexts/JoinedHubsContext'
 import { StudyPartnersProvider } from '@/contexts/StudyPartnersContext'
@@ -37,18 +38,20 @@ export function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <UserPlanProvider>
-        <StudyPartnersProvider>
-          <HubsProvider>
-            <JoinedHubsProvider>
-              <BrowserRouter>
-                <AppRoutes />
-                <GlowPaywallModal />
-              </BrowserRouter>
-            </JoinedHubsProvider>
-          </HubsProvider>
-        </StudyPartnersProvider>
-      </UserPlanProvider>
+      <GlobalPresenceProvider>
+        <UserPlanProvider>
+          <StudyPartnersProvider>
+            <HubsProvider>
+              <JoinedHubsProvider>
+                <BrowserRouter>
+                  <AppRoutes />
+                  <GlowPaywallModal />
+                </BrowserRouter>
+              </JoinedHubsProvider>
+            </HubsProvider>
+          </StudyPartnersProvider>
+        </UserPlanProvider>
+      </GlobalPresenceProvider>
     </AuthProvider>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getHubRoomsAdapter, type StudyRoom } from '@/lib/hubRooms'
 import { filterVisibleRooms } from '@/lib/hubRooms/utils'
+import { useGlobalPresenceTrack } from '@/hooks/useGlobalPresenceTrack'
 import { useRoomPresence } from '@/hooks/useRoomPresence'
 
 export function useStudyRoom(roomId: string | undefined) {
@@ -48,6 +49,16 @@ export function useStudyRoom(roomId: string | undefined) {
     if (filterVisibleRooms([merged]).length === 0) return null
     return merged
   }, [room, presentCount, emptySince])
+
+  useGlobalPresenceTrack(
+    roomWithPresence
+      ? {
+          status: 'focando',
+          current_room: roomWithPresence.name,
+          room_id: roomWithPresence.id,
+        }
+      : null,
+  )
 
   return { room: roomWithPresence, loading }
 }

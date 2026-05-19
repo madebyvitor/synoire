@@ -29,6 +29,7 @@ vi.mock('@/lib/hubs', async (importOriginal) => {
 
 import { AppRoutes } from './App'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { GlobalPresenceProvider } from '@/contexts/GlobalPresenceContext'
 import { HubsProvider } from '@/contexts/HubsContext'
 import { JoinedHubsProvider } from '@/contexts/JoinedHubsContext'
 import { StudyPartnersProvider } from '@/contexts/StudyPartnersContext'
@@ -37,8 +38,9 @@ import { UserPlanProvider } from '@/contexts/UserPlanContext'
 function renderAt(path: string) {
   return render(
     <AuthProvider>
-      <UserPlanProvider>
-        <StudyPartnersProvider>
+      <GlobalPresenceProvider>
+        <UserPlanProvider>
+          <StudyPartnersProvider>
           <HubsProvider>
             <JoinedHubsProvider>
               <MemoryRouter initialEntries={[path]}>
@@ -46,8 +48,9 @@ function renderAt(path: string) {
               </MemoryRouter>
             </JoinedHubsProvider>
           </HubsProvider>
-        </StudyPartnersProvider>
-      </UserPlanProvider>
+          </StudyPartnersProvider>
+        </UserPlanProvider>
+      </GlobalPresenceProvider>
     </AuthProvider>,
   )
 }

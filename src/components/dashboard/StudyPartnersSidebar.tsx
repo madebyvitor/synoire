@@ -34,7 +34,7 @@ function OnlinePartnerRow({
   return (
     <li className="group relative rounded-xl border border-transparent px-2 py-2.5 transition hover:border-white/5 hover:bg-white/[0.03]">
       <div className="flex items-start gap-3">
-        <PartnerAvatar partner={partner} />
+        <PartnerAvatar partner={partner} showPresenceIndicator />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="truncate text-sm font-medium text-primary">
@@ -284,7 +284,9 @@ export function StudyPartnersSidebar({
               <Section
                 title="Offline"
                 empty={
-                  offlinePartners.length === 0 ? 'Todos os parceiros estão online.' : undefined
+                  offlinePartners.length === 0
+                    ? 'Nenhum parceiro offline no momento.'
+                    : undefined
                 }
               >
                 {offlinePartners.map((p) => (
