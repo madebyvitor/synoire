@@ -9,6 +9,7 @@ import { SessionOnboarding } from '@/components/room/SessionOnboarding'
 import { InvitePartnersModal } from '@/components/room/InvitePartnersModal'
 import { ThemeSelectorModal } from '@/components/room/ThemeSelectorModal'
 import { SAMPLE_HUBS } from '@/data/sampleHubs'
+import { useAuth } from '@/contexts/AuthContext'
 import { useStudyPartners } from '@/contexts/StudyPartnersContext'
 import { useUserPlan } from '@/contexts/UserPlanContext'
 import { useGlobalRoomTimer } from '@/hooks/useGlobalRoomTimer'
@@ -21,6 +22,7 @@ import { useRoomChat } from '@/hooks/useRoomChat'
 import { useRoomSoundscape } from '@/hooks/useRoomSoundscape'
 import { getImmersiveTheme, type ImmersiveThemeId } from '@/lib/immersiveThemes'
 import { canSendRoomChat } from '@/lib/roomChat'
+import { shouldPromoteLoungeToActive } from '@/lib/roomSession/loungePromotion'
 import { formatTimerSeconds, type RoomPhase } from '@/lib/roomTimer'
 import {
   pageStaggerContainer,
@@ -65,7 +67,8 @@ export function RoomPage() {
     [roomId, studyRoom?.name],
   )
   const prefersReducedMotion = usePrefersReducedMotion()
-  const { hasGlowAccess } = useUserPlan()
+  const { user } = useAuth()
+  const { hasGlowAccess, openPaywall } = useUserPlan()
   const { acceptedPartners } = useStudyPartners()
   const { selectedThemeId, effectiveThemeId, setTheme } = useImmersiveTheme()
   const staggerC = pageStaggerContainer(prefersReducedMotion)
@@ -156,6 +159,22 @@ export function RoomPage() {
   const isActive = sessionMode === 'active'
   const showChrome = isActive
   const chatEnabled = isLounge || isActive
+
+  const isRoomCreator = Boolean(
+    user?.id && studyRoom?.creator_id && user.id === studyRoom.creator_id,
+  )
+  const showInviteButton = Boolean(
+    studyRoom && (!studyRoom.is_private || isRoomCreator),
+  )
+
+  const handleInvitePartnersClick = useCallback(() => {
+    if (studyRoom?.is_private && !hasGlowAccess) {
+      openPaywall('Salas privadas são exclusivas do plano Glow.')
+      return
+    }
+    setInvitePartnersOpen(true)
+    setChatOpen(false)
+  }, [studyRoom?.is_private, hasGlowAccess, openPaywall])
   const canSendMessage = canSendRoomChat(sessionMode, phase)
 
   const roomChat = useRoomChat({
@@ -229,17 +248,12 @@ export function RoomPage() {
     [isIdle, phase],
   )
 
+  /** Start focus only for participants already in the active session (not lounge/onboarding). */
   useEffect(() => {
     if (sessionMode !== 'active') return
-    if (!isIdle) return
-    void startFocusTimer()
-  }, [sessionMode, isIdle, startFocusTimer])
-
-  /** After 1 min prep, start focus even if user is not in lounge yet. */
-  useEffect(() => {
     if (!isIdle || remainingSeconds > 0) return
     void startFocusTimer()
-  }, [isIdle, remainingSeconds, startFocusTimer])
+  }, [sessionMode, isIdle, remainingSeconds, startFocusTimer])
 
   useEffect(() => {
     if (sessionMode !== 'lounge') return
@@ -248,15 +262,13 @@ export function RoomPage() {
     const target = loungeWaitTargetRef.current
     if (!target) return
 
-    const shouldEnter =
-      (target === 'prep' && isIdle && remainingSeconds === 0) ||
-      (target === 'break' &&
-        phase === 'break' &&
-        loungeEnteredPhaseRef.current === 'focus') ||
-      (target === 'focus' &&
-        phase === 'focus' &&
-        !isIdle &&
-        loungeEnteredPhaseRef.current === 'break')
+    const shouldEnter = shouldPromoteLoungeToActive(
+      target,
+      loungeEnteredPhaseRef.current,
+      phase,
+      isIdle,
+      remainingSeconds,
+    )
 
     if (!shouldEnter) return
 
@@ -401,16 +413,13 @@ export function RoomPage() {
             Sair
           </Link>
           <div className="pointer-events-auto flex items-center gap-2">
-            {studyRoom?.is_private && hasGlowAccess && (
+            {showInviteButton && (
               <button
                 type="button"
-                onClick={() => {
-                  setInvitePartnersOpen(true)
-                  setChatOpen(false)
-                }}
+                onClick={handleInvitePartnersClick}
                 className="rounded-lg px-3 py-2 text-sm text-firefly hover:bg-elevated"
               >
-                Convidar Parceiros
+                {studyRoom?.is_private ? 'Convidar Parceiros' : 'Compartilhar sala'}
               </button>
             )}
             <RoomChatToggleButton
@@ -434,14 +443,23 @@ export function RoomPage() {
       )}
 
       {isLounge && (
-        <div className="pointer-events-none fixed right-0 top-0 z-20 p-4 sm:p-6">
+        <motion.div className="pointer-events-none fixed right-0 top-0 z-20 flex items-center gap-2 p-4 sm:p-6">
+          {showInviteButton && (
+            <button
+              type="button"
+              onClick={handleInvitePartnersClick}
+              className="pointer-events-auto rounded-lg px-3 py-2 text-sm text-firefly hover:bg-elevated"
+            >
+              {studyRoom?.is_private ? 'Convidar Parceiros' : 'Compartilhar sala'}
+            </button>
+          )}
           <RoomChatToggleButton
             open={chatOpen}
             unreadCount={roomChat.unreadCount}
             onClick={toggleChat}
             className="pointer-events-auto"
           />
-        </div>
+        </motion.div>
       )}
 
       {chatEnabled && (
@@ -467,11 +485,12 @@ export function RoomPage() {
         prefersReducedMotion={prefersReducedMotion}
       />
 
-      {roomId && studyRoom?.is_private && hasGlowAccess && (
+      {roomId && studyRoom && showInviteButton && (
         <InvitePartnersModal
           open={invitePartnersOpen}
           onClose={() => setInvitePartnersOpen(false)}
           roomId={roomId}
+          variant={studyRoom.is_private ? 'private' : 'public'}
           partners={acceptedPartners}
           prefersReducedMotion={prefersReducedMotion}
         />

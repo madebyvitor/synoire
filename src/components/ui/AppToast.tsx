@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 type AppToastProps = {
   message: string
@@ -14,11 +14,14 @@ export function AppToast({
   onDismiss,
   durationMs = 3000,
 }: AppToastProps) {
+  const onDismissRef = useRef(onDismiss)
+  onDismissRef.current = onDismiss
+
   useEffect(() => {
     if (!visible) return
-    const id = window.setTimeout(onDismiss, durationMs)
+    const id = window.setTimeout(() => onDismissRef.current(), durationMs)
     return () => window.clearTimeout(id)
-  }, [visible, message, durationMs, onDismiss])
+  }, [visible, message, durationMs])
 
   return (
     <AnimatePresence>

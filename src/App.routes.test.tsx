@@ -32,6 +32,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { GlobalPresenceProvider } from '@/contexts/GlobalPresenceContext'
 import { HubsProvider } from '@/contexts/HubsContext'
 import { JoinedHubsProvider } from '@/contexts/JoinedHubsContext'
+import { RoomInvitesProvider } from '@/contexts/RoomInvitesContext'
 import { StudyPartnersProvider } from '@/contexts/StudyPartnersContext'
 import { UserPlanProvider } from '@/contexts/UserPlanContext'
 
@@ -41,13 +42,15 @@ function renderAt(path: string) {
       <GlobalPresenceProvider>
         <UserPlanProvider>
           <StudyPartnersProvider>
-          <HubsProvider>
-            <JoinedHubsProvider>
-              <MemoryRouter initialEntries={[path]}>
-                <AppRoutes />
-              </MemoryRouter>
-            </JoinedHubsProvider>
-          </HubsProvider>
+            <RoomInvitesProvider>
+              <HubsProvider>
+                <JoinedHubsProvider>
+                  <MemoryRouter initialEntries={[path]}>
+                    <AppRoutes />
+                  </MemoryRouter>
+                </JoinedHubsProvider>
+              </HubsProvider>
+            </RoomInvitesProvider>
           </StudyPartnersProvider>
         </UserPlanProvider>
       </GlobalPresenceProvider>

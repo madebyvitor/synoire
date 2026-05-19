@@ -1,5 +1,16 @@
 import { ROOM_ACCESS_STORAGE_KEY, type RoomAccessGrant } from './types'
 
+export const ROOM_ACCESS_CHANGED_EVENT = 'synoire:room-access-changed'
+
+export type RoomAccessLocalChange =
+  | { type: 'INSERT'; grant: RoomAccessGrant }
+  | { type: 'DELETE'; roomId: string; userId: string }
+
+function notifyRoomAccessChanged(detail: RoomAccessLocalChange): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(ROOM_ACCESS_CHANGED_EVENT, { detail }))
+}
+
 function readGrants(): RoomAccessGrant[] {
   if (typeof localStorage === 'undefined') return []
   try {
@@ -43,6 +54,7 @@ export function grantRoomAccess(roomId: string, userId: string): RoomAccessGrant
     grantedAt: new Date().toISOString(),
   }
   writeGrants([...grants, grant])
+  notifyRoomAccessChanged({ type: 'INSERT', grant })
   return grant
 }
 
@@ -52,6 +64,19 @@ export function hasRoomAccess(roomId: string, userId: string): boolean {
 
 export function listGrantsForRoom(roomId: string): RoomAccessGrant[] {
   return readGrants().filter((g) => g.roomId === roomId)
+}
+
+export function listGrantsForUser(userId: string): RoomAccessGrant[] {
+  return readGrants().filter((g) => g.userId === userId)
+}
+
+export function revokeRoomAccessGrant(roomId: string, userId: string): boolean {
+  const grants = readGrants()
+  const next = grants.filter((g) => !(g.roomId === roomId && g.userId === userId))
+  if (next.length === grants.length) return false
+  writeGrants(next)
+  notifyRoomAccessChanged({ type: 'DELETE', roomId, userId })
+  return true
 }
 
 export function clearRoomAccessForTests(): void {

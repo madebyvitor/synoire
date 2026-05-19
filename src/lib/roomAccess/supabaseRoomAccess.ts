@@ -1,5 +1,6 @@
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import { isForbiddenError, mapRoomQueryError } from '@/lib/hubRooms/errors'
+import { isDuplicateRoomAccessError } from './errors'
 import { mapAccessRow } from './mapAccessRow'
 import type { RoomAccessGrant, RoomAccessResult, RoomAccessRow } from './types'
 
@@ -29,6 +30,13 @@ export async function grantRoomAccessSupabase(
         ok: false,
         message: 'Apenas o criador da sala pode convidar parceiros.',
         code: 'forbidden',
+      }
+    }
+    if (isDuplicateRoomAccessError(error)) {
+      return {
+        ok: true,
+        data: { roomId, userId, grantedAt: new Date().toISOString() },
+        alreadyGranted: true,
       }
     }
     return { ok: false, message: mapRoomQueryError(error.message) }

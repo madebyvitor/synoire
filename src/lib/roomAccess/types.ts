@@ -6,6 +6,17 @@ export type RoomAccessGrant = {
   grantedAt: string
   username?: string
   avatarUrl?: string | null
+  roomName?: string
+  inviterUserId?: string
+  inviterUsername?: string
+}
+
+export type IncomingRoomInvite = {
+  roomId: string
+  roomName: string
+  inviterUserId: string
+  inviterUsername: string
+  grantedAt: string
 }
 
 export type RoomAccessRow = {
@@ -16,5 +27,5 @@ export type RoomAccessRow = {
 }
 
 export type RoomAccessResult<T> =
-  | { ok: true; data: T }
+  | { ok: true; data: T; alreadyGranted?: boolean }
   | { ok: false; message: string; code?: 'forbidden' }

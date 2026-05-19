@@ -4,13 +4,22 @@ import {
   grantRoomAccess as grantLocal,
   hasRoomAccess as hasLocal,
   listGrantsForRoom as listLocal,
+  revokeRoomAccessGrant as revokeLocal,
 } from './storage'
+import { listIncomingRoomInvites } from './listIncomingRoomInvites'
 import {
   grantRoomAccessSupabase,
   listRoomAccessSupabase,
   revokeRoomAccessSupabase,
 } from './supabaseRoomAccess'
-import type { RoomAccessGrant, RoomAccessResult } from './types'
+import type { IncomingRoomInvite, RoomAccessGrant, RoomAccessResult } from './types'
+
+export { listIncomingRoomInvites } from './listIncomingRoomInvites'
+export {
+  subscribeRoomAccessRealtime,
+  subscribeRoomAccessStorageSync,
+} from './subscribeRoomAccessRealtime'
+export type { IncomingRoomInvite } from './types'
 
 function useSupabase(): boolean {
   return isSupabaseConfigured && !isDemoMode
@@ -43,8 +52,14 @@ export async function revokeRoomAccess(
   if (useSupabase()) {
     return revokeRoomAccessSupabase(roomId, userId)
   }
-  // local storage has no revoke in MVP — no-op success
+  revokeLocal(roomId, userId)
   return { ok: true, data: undefined }
+}
+
+export async function fetchIncomingRoomInvites(
+  userId: string,
+): Promise<RoomAccessResult<IncomingRoomInvite[]>> {
+  return listIncomingRoomInvites(userId)
 }
 
 export async function hasRoomAccess(roomId: string, userId: string): Promise<boolean> {

@@ -14,8 +14,8 @@ function payloadToEvent(
   if (payload.eventType === 'UPDATE' && payload.new) {
     return { type: 'UPDATE', row: payload.new }
   }
-  if (payload.eventType === 'DELETE' && payload.old) {
-    return { type: 'DELETE', row: payload.old }
+  if (payload.eventType === 'DELETE' && payload.old?.id) {
+    return { type: 'DELETE', row: payload.old as PartnershipRow }
   }
   return null
 }

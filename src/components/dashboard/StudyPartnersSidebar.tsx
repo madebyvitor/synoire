@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { PartnerAvatar } from '@/components/dashboard/PartnerAvatar'
 import { InvitePartnerModal } from '@/components/dashboard/InvitePartnerModal'
 import { AppToast } from '@/components/ui/AppToast'
+import { useRoomInvites } from '@/contexts/RoomInvitesContext'
 import { useStudyPartners } from '@/contexts/StudyPartnersContext'
+import type { IncomingRoomInvite } from '@/lib/roomAccess'
 import type { StudyPartnerView } from '@/lib/studyPartners'
 
 export type StudyPartnersSidebarProps = {
@@ -125,6 +127,47 @@ function OutgoingInviteRow({ partner }: { partner: StudyPartnerView }) {
   )
 }
 
+function IncomingRoomInviteRow({
+  invite,
+  onAccept,
+  onDecline,
+  disabled,
+}: {
+  invite: IncomingRoomInvite
+  onAccept: (invite: IncomingRoomInvite) => void
+  onDecline: (invite: IncomingRoomInvite) => void
+  disabled?: boolean
+}) {
+  return (
+    <li className="flex flex-col gap-2 rounded-xl border border-white/5 px-2 py-2.5 sm:flex-row sm:items-center">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-primary">{invite.roomName}</p>
+        <p className="text-[11px] text-secondary">
+          Convite de @{invite.inviterUsername}
+        </p>
+      </div>
+      <div className="flex shrink-0 gap-1.5">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onAccept(invite)}
+          className="rounded-lg border border-firefly/30 bg-firefly/10 px-2 py-1 text-[11px] font-medium text-firefly hover:brightness-110 disabled:opacity-50"
+        >
+          Entrar
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => void onDecline(invite)}
+          className="rounded-lg border border-white/10 px-2 py-1 text-[11px] text-secondary hover:bg-elevated hover:text-primary disabled:opacity-50"
+        >
+          Recusar
+        </button>
+      </div>
+    </li>
+  )
+}
+
 function Section({
   title,
   children,
@@ -165,9 +208,15 @@ export function StudyPartnersSidebar({
     acceptInvite,
     declineInvite,
   } = useStudyPartners()
+  const {
+    incomingRoomInvites,
+    acceptRoomInvite,
+    declineRoomInvite,
+  } = useRoomInvites()
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const [actingId, setActingId] = useState<string | null>(null)
+  const [actingRoomInviteKey, setActingRoomInviteKey] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
     message: '',
     visible: false,
@@ -225,6 +274,29 @@ export function StudyPartnersSidebar({
       setActingId(null)
     },
     [declineInvite],
+  )
+
+  const roomInviteKey = useCallback(
+    (invite: IncomingRoomInvite) => `${invite.roomId}:${invite.grantedAt}`,
+    [],
+  )
+
+  const handleAcceptRoomInvite = useCallback(
+    (invite: IncomingRoomInvite) => {
+      acceptRoomInvite(invite)
+      handleJoinRoom(invite.roomId)
+    },
+    [acceptRoomInvite, handleJoinRoom],
+  )
+
+  const handleDeclineRoomInvite = useCallback(
+    async (invite: IncomingRoomInvite) => {
+      const key = roomInviteKey(invite)
+      setActingRoomInviteKey(key)
+      await declineRoomInvite(invite)
+      setActingRoomInviteKey(null)
+    },
+    [declineRoomInvite, roomInviteKey],
   )
 
   const slide = prefersReducedMotion
@@ -294,8 +366,22 @@ export function StudyPartnersSidebar({
                 ))}
               </Section>
 
+              {incomingRoomInvites.length > 0 && (
+                <Section title="Convites para salas">
+                  {incomingRoomInvites.map((invite) => (
+                    <IncomingRoomInviteRow
+                      key={roomInviteKey(invite)}
+                      invite={invite}
+                      onAccept={handleAcceptRoomInvite}
+                      onDecline={handleDeclineRoomInvite}
+                      disabled={actingRoomInviteKey === roomInviteKey(invite)}
+                    />
+                  ))}
+                </Section>
+              )}
+
               {(incomingInvites.length > 0 || outgoingInvites.length > 0) && (
-                <Section title="Convites pendentes">
+                <Section title="Convites de parceria">
                   {incomingInvites.map((p) => (
                     <IncomingInviteRow
                       key={p.partnershipId}

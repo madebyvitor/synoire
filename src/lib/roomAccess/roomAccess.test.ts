@@ -6,6 +6,7 @@ import {
   listGrantsForRoom,
 } from './storage'
 import { grantRoomAccess as grantClient, listRoomAccess } from './client'
+import { grantRoomAccessSupabase } from './supabaseRoomAccess'
 
 const singleMock = vi.fn()
 const selectMock = vi.fn()
@@ -89,6 +90,32 @@ describe('roomAccess client (supabase)', () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data).toHaveLength(1)
+    }
+  })
+})
+
+describe('grantRoomAccessSupabase duplicate', () => {
+  beforeEach(() => {
+    fromMock.mockReset()
+    insertMock.mockReset()
+    selectMock.mockReset()
+    singleMock.mockReset()
+  })
+
+  it('treats unique violation as already granted', async () => {
+    fromMock.mockReturnValue({ insert: insertMock })
+    insertMock.mockReturnValue({ select: selectMock })
+    selectMock.mockReturnValue({ single: singleMock })
+    singleMock.mockResolvedValue({
+      data: null,
+      error: { code: '23505', message: 'duplicate key value violates unique constraint' },
+    })
+
+    const result = await grantRoomAccessSupabase('room-1', 'user-vitor')
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.alreadyGranted).toBe(true)
+      expect(result.data.userId).toBe('user-vitor')
     }
   })
 })
