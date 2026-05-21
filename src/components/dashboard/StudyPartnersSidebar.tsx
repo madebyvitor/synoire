@@ -222,6 +222,7 @@ export function StudyPartnersSidebar({
   } = useRoomInvites()
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [isSendingInvite, setIsSendingInvite] = useState(false)
   const [actingId, setActingId] = useState<string | null>(null)
   const [actingRoomInviteKey, setActingRoomInviteKey] = useState<string | null>(null)
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null)
@@ -268,24 +269,32 @@ export function StudyPartnersSidebar({
 
   const handleSendInvite = useCallback(
     async (username: string) => {
-      const result = await sendPartnerInvite(username)
-      if (!result.ok) {
-        if (result.error === 'not_found') {
-          return { ok: false as const, error: 'Estudante não encontrado. Verifique o @username.' }
-        }
-        if (result.error === 'already_exists') {
-          return {
-            ok: false as const,
-            error: 'Já existe convite ou parceria com este usuário.',
+      setIsSendingInvite(true)
+      try {
+        const result = await sendPartnerInvite(username)
+        if (!result.ok) {
+          if (result.error === 'not_found') {
+            return {
+              ok: false as const,
+              error: 'Estudante não encontrado. Verifique o nome de usuário.',
+            }
           }
+          if (result.error === 'already_exists') {
+            return {
+              ok: false as const,
+              error: 'Já existe convite ou parceria com este usuário.',
+            }
+          }
+          if (result.error === 'self_invite') {
+            return { ok: false as const, error: 'Você não pode convidar a si mesmo.' }
+          }
+          return { ok: false as const, error: 'Nome de usuário inválido.' }
         }
-        if (result.error === 'self_invite') {
-          return { ok: false as const, error: 'Você não pode convidar a si mesmo.' }
-        }
-        return { ok: false as const, error: 'Username inválido.' }
+        showToast('Convite enviado com sucesso!')
+        return { ok: true as const }
+      } finally {
+        setIsSendingInvite(false)
       }
-      showToast('Convite enviado.')
-      return { ok: true as const }
     },
     [sendPartnerInvite, showToast],
   )
@@ -454,6 +463,7 @@ export function StudyPartnersSidebar({
         open={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         prefersReducedMotion={prefersReducedMotion}
+        isSubmitting={isSendingInvite}
         onSend={handleSendInvite}
       />
 

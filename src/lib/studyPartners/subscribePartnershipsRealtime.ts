@@ -22,6 +22,8 @@ function payloadToEvent(
 
 /**
  * Subscribes to partnership rows where the user is sender or receiver.
+ * Supabase client filters do not support OR in one listener, so we attach
+ * two postgres_changes handlers (receiver_id and sender_id).
  * Returns an unsubscribe function that removes the Realtime channel.
  */
 export function subscribePartnershipsRealtime(

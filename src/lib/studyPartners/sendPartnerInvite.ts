@@ -1,6 +1,7 @@
 import { createPartnership } from './createPartnership'
 import { deletePartnership } from './deletePartnership'
 import { findProfileByUsername } from './findProfileByUsername'
+import { mapPartnershipRow } from './mapPartnershipRow'
 import { listPartnerships } from './listPartnerships'
 import { listPartnershipRowsForPair } from './listPartnershipRowsForPair'
 import type { SendInviteResult } from './types'
@@ -54,5 +55,10 @@ export async function sendPartnerInvite(
     return { ok: false, error: 'not_found' }
   }
 
-  return { ok: true }
+  const partnership = mapPartnershipRow(createResult.data, userId)
+  if (!partnership) {
+    return { ok: false, error: 'not_found' }
+  }
+
+  return { ok: true, partnership }
 }

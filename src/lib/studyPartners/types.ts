@@ -60,5 +60,5 @@ export type PartnershipsResult<T> =
   | { ok: false; message: string }
 
 export type SendInviteResult =
-  | { ok: true }
+  | { ok: true; partnership: MappedPartnership }
   | { ok: false; error: 'not_found' | 'already_exists' | 'invalid_username' | 'self_invite' }

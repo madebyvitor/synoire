@@ -34,7 +34,7 @@ type StudyPartnersContextValue = PartnerLists & {
   sendPartnerInvite: (username: string) => Promise<SendInviteResult>
   acceptInvite: (partnershipId: string) => Promise<void>
   declineInvite: (partnershipId: string) => Promise<void>
-  refresh: () => Promise<void>
+  refresh: (options?: { silent?: boolean }) => Promise<void>
 }
 
 const StudyPartnersContext = createContext<StudyPartnersContextValue | null>(null)
@@ -91,17 +91,19 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options?: { silent?: boolean }) => {
     const userId = user?.id
+    const silent = options?.silent === true
+
     if (!userId) {
       setPartnerships([])
       setEnrichment(new Map())
       setError(null)
-      setIsLoading(false)
+      if (!silent) setIsLoading(false)
       return
     }
 
-    setIsLoading(true)
+    if (!silent) setIsLoading(true)
     setError(null)
 
     const partnershipsResult = await listPartnerships(userId)
@@ -109,7 +111,7 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
       setPartnerships([])
       setEnrichment(new Map())
       setError(partnershipsResult.message)
-      setIsLoading(false)
+      if (!silent) setIsLoading(false)
       return
     }
 
@@ -117,7 +119,7 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
     const partnerIds = partnershipsResult.data.map((p) => p.partnerUserId)
     setEnrichment(await fetchPartnerEnrichment(partnerIds))
     setError(null)
-    setIsLoading(false)
+    if (!silent) setIsLoading(false)
   }, [user?.id])
 
   useEffect(() => {
@@ -149,7 +151,24 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
 
       const result = await sendPartnerInviteLib(userId, username)
       if (result.ok) {
-        await refresh()
+        const { partnership } = result
+        setPartnerships((prev) => {
+          const index = prev.findIndex((p) => p.id === partnership.id)
+          if (index === -1) return [...prev, partnership]
+          const next = [...prev]
+          next[index] = partnership
+          return next
+        })
+
+        void fetchPartnerEnrichment([partnership.partnerUserId]).then((fetched) => {
+          setEnrichment((prev) => {
+            const next = new Map(prev)
+            for (const [id, profile] of fetched) next.set(id, profile)
+            return next
+          })
+        })
+
+        void refresh({ silent: true })
       }
       return result
     },
