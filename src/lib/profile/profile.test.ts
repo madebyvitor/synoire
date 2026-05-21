@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getProfile } from './getProfile'
+import { updateProfile } from './updateProfile'
 import { updateProfileFocus } from './updateProfileFocus'
 
 const maybeSingleMock = vi.fn()
@@ -130,6 +131,82 @@ describe('updateProfileFocus', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.message).toBe('Não foi possível atualizar o perfil.')
+    }
+  })
+})
+
+describe('updateProfile', () => {
+  beforeEach(() => {
+    singleMock.mockReset()
+    eqUpdateMock.mockReset()
+    selectMock.mockReset()
+    updateMock.mockReset()
+    fromMock.mockReset()
+    selectMock.mockReturnValue({ single: singleMock })
+    eqUpdateMock.mockReturnValue({ select: selectMock })
+    updateMock.mockReturnValue({ eq: eqUpdateMock })
+    fromMock.mockReturnValue({ update: updateMock })
+  })
+
+  it('validates short username', async () => {
+    const result = await updateProfile('u1', {
+      username: 'a',
+      targetExam: 'bb',
+      bio: '',
+    })
+    expect(result).toEqual({
+      ok: false,
+      message: 'Nome de usuário deve ter entre 2 e 32 caracteres.',
+    })
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+
+  it('returns updated profile on success', async () => {
+    singleMock.mockResolvedValue({
+      data: {
+        id: 'u1',
+        username: 'novo_user',
+        avatar_url: null,
+        target_exam: 'policia-federal',
+        bio: 'Bio atualizada',
+      },
+      error: null,
+    })
+    const result = await updateProfile('u1', {
+      username: 'novo_user',
+      targetExam: 'policia-federal',
+      bio: 'Bio atualizada',
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.profile.displayName).toBe('novo_user')
+      expect(result.profile.targetExam).toBe('policia-federal')
+      expect(result.profile.bio).toBe('Bio atualizada')
+    }
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        username: 'novo_user',
+        target_exam: 'policia-federal',
+        bio: 'Bio atualizada',
+        updated_at: expect.any(String),
+      }),
+    )
+    expect(eqUpdateMock).toHaveBeenCalledWith('id', 'u1')
+  })
+
+  it('maps supabase errors', async () => {
+    singleMock.mockResolvedValue({
+      data: null,
+      error: { message: 'JWT expired' },
+    })
+    const result = await updateProfile('u1', {
+      username: 'vitor',
+      targetExam: 'bb',
+      bio: '',
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.message).toBe('Entre na sua conta para atualizar o perfil.')
     }
   })
 })

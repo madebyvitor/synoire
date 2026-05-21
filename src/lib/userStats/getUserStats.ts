@@ -5,8 +5,14 @@ function mapUserStatsRow(row: UserStatsRow): UserStatsView {
   return {
     currentStreak: row.current_streak ?? 0,
     totalHours: Number(row.total_hours ?? 0),
-    dailyGoalMinutes: row.daily_goal_minutes ?? 240,
+    weeklyGoalMinutes: row.weekly_goal_minutes ?? 0,
   }
+}
+
+const EMPTY_STATS: UserStatsView = {
+  currentStreak: 0,
+  totalHours: 0,
+  weeklyGoalMinutes: 0,
 }
 
 function mapQueryError(message: string): string {
@@ -29,7 +35,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult<User
 
   const { data, error } = await supabase
     .from('user_stats')
-    .select('user_id, current_streak, total_hours, daily_goal_minutes')
+    .select('user_id, current_streak, total_hours, weekly_goal_minutes')
     .eq('user_id', userId)
     .maybeSingle()
 
@@ -39,10 +45,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult<User
   }
 
   if (!data) {
-    return {
-      ok: true,
-      data: { currentStreak: 0, totalHours: 0, dailyGoalMinutes: 240 },
-    }
+    return { ok: true, data: EMPTY_STATS }
   }
 
   return { ok: true, data: mapUserStatsRow(data as UserStatsRow) }

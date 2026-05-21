@@ -6,4 +6,10 @@ export {
   type UpdateProfileFocusInput,
   type UpdateProfileFocusResult,
 } from './updateProfileFocus'
+export {
+  updateProfile,
+  type UpdateProfileInput,
+  type UpdateProfileResult,
+} from './updateProfile'
+export { validateUsername } from './validateUsername'
 export { mapProfileRow, type ProfileRow, type ProfileView } from './types'

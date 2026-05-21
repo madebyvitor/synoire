@@ -7,6 +7,42 @@ vi.mock('@/lib/supabase', () => ({
   getSupabase: () => null,
 }))
 
+vi.mock('@/hooks/useUserStats', () => ({
+  useUserStats: () => ({
+    stats: { currentStreak: 0, totalHours: 0, weeklyGoalMinutes: 1200 },
+    isLoading: false,
+    error: null,
+    isSaving: false,
+    refresh: vi.fn(),
+    saveWeeklyGoal: vi.fn(async () => ({ ok: true as const })),
+  }),
+}))
+
+vi.mock('@/hooks/useRoomEntry', () => ({
+  useRoomEntry: () => ({
+    room: {
+      id: 'demo',
+      hub_slug: 'pf',
+      name: 'Sala demo',
+      focus_cycle: '25/5',
+      is_private: false,
+      creator_id: 'user-1',
+      current_timer_state: {
+        status: 'idle',
+        started_at: null,
+        focus_sec: 1500,
+        break_sec: 300,
+      },
+      present_count: 0,
+      empty_since: null,
+      created_at: '2026-05-16T12:00:00.000Z',
+    },
+    entryStatus: 'ready',
+    entryMessage: null,
+    roomLoading: false,
+  }),
+}))
+
 vi.mock('@/lib/hubs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/hubs')>()
   const { SAMPLE_HUBS } = await import('@/data/sampleHubs')

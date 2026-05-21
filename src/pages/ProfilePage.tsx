@@ -1,16 +1,20 @@
 import { motion } from 'motion/react'
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { EditProfileModal } from '@/components/profile/EditProfileModal'
+import type { EditProfileSavePayload } from '@/components/profile/EditProfileModal'
+import { FavoriteHubCard } from '@/components/profile/FavoriteHubCard'
+import { AppToast } from '@/components/ui/AppToast'
+import { useJoinedHubs } from '@/contexts/JoinedHubsContext'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { useProfile } from '@/hooks/useProfile'
-import { formatTargetExamSlug, MAX_BIO_LENGTH } from '@/lib/profile'
+import { useUserStats } from '@/hooks/useUserStats'
+import { formatTargetExamSlug } from '@/lib/profile'
 import {
   pageStaggerContainer,
   pageStaggerItem,
   pageStaggerListInner,
 } from '@/motion/pageStagger'
-
-const inputClass =
-  'mt-2 w-full rounded-xl border border-border bg-night/60 px-4 py-3 text-sm text-primary placeholder:text-secondary/60 focus:border-firefly/40 focus:outline-none focus:ring-1 focus:ring-firefly/30'
 
 function initialsFromName(name: string | null): string {
   if (!name?.trim()) return 'US'
@@ -51,39 +55,18 @@ function LightningWatermark({ className }: { className?: string }) {
   )
 }
 
-function HubGlyph({ className }: { className?: string }) {
-  return (
-    <span
-      className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-elevated ${className ?? ''}`}
-      aria-hidden
-    >
-      <svg
-        className="h-2.5 w-2.5 text-secondary"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </svg>
-    </span>
-  )
-}
-
 export function ProfilePage() {
   const reducedMotion = usePrefersReducedMotion()
-  const { profile, isLoading, error, isSaving, updateFocus } = useProfile()
-  const [targetExamInput, setTargetExamInput] = useState('')
-  const [bioInput, setBioInput] = useState('')
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formSuccess, setFormSuccess] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!profile) return
-    setTargetExamInput(profile.targetExam ?? '')
-    setBioInput(profile.bio ?? '')
-  }, [profile])
+  const { profile, isLoading, error, isSaving, updateProfile } = useProfile()
+  const {
+    stats,
+    isLoading: statsLoading,
+    isSaving: isSavingGoal,
+    saveWeeklyGoal,
+  } = useUserStats()
+  const { joinedHubs, isLoading: hubsLoading } = useJoinedHubs()
+  const [editOpen, setEditOpen] = useState(false)
+  const [toast, setToast] = useState({ message: '', visible: false })
 
   const c = pageStaggerContainer(reducedMotion)
   const item = pageStaggerItem(reducedMotion)
@@ -93,28 +76,50 @@ export function ProfilePage() {
   const displayName = profile?.displayName ?? null
   const initials = useMemo(() => initialsFromName(displayName), [displayName])
   const nameLine = displayName?.trim() || dash
-  const hubLine = dash
   const examLine = formatTargetExamSlug(profile?.targetExam) ?? profile?.targetExam?.trim() ?? dash
   const bioText = profile?.bio?.trim()
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setFormError(null)
-    setFormSuccess(null)
+  const editInitialValues = useMemo(
+    () => ({
+      username: profile?.displayName ?? '',
+      targetExam: profile?.targetExam ?? '',
+      bio: profile?.bio ?? '',
+      weeklyGoalHours:
+        stats.weeklyGoalMinutes > 0 ? String(stats.weeklyGoalMinutes / 60) : '',
+    }),
+    [profile, stats.weeklyGoalMinutes],
+  )
 
-    const result = await updateFocus({
-      targetExam: targetExamInput,
-      bio: bioInput,
-    })
+  const isSubmitting = isSaving || isSavingGoal
 
-    if (result.ok) {
-      setFormSuccess('Foco atualizado com sucesso.')
-    } else {
-      setFormError(result.message)
-    }
-  }
+  const handleSaveProfile = useCallback(
+    async (
+      payload: EditProfileSavePayload,
+    ): Promise<{ ok: true } | { ok: false; message: string }> => {
+      const [goalResult, profileResult] = await Promise.all([
+        saveWeeklyGoal(payload.weeklyGoalHours),
+        updateProfile({
+          username: payload.username,
+          targetExam: payload.targetExam,
+          bio: payload.bio,
+        }),
+      ])
 
-  if (isLoading) {
+      if (!goalResult.ok) {
+        return { ok: false, message: goalResult.message }
+      }
+      if (!profileResult.ok) {
+        return { ok: false, message: profileResult.message }
+      }
+
+      setEditOpen(false)
+      setToast({ message: 'Perfil atualizado com sucesso!', visible: true })
+      return { ok: true }
+    },
+    [saveWeeklyGoal, updateProfile],
+  )
+
+  if (isLoading || statsLoading) {
     return (
       <motion.div
         className="mx-auto flex max-w-2xl items-center justify-center py-24 text-secondary"
@@ -179,32 +184,52 @@ export function ProfilePage() {
                 {initials}
               </motion.div>
             </motion.div>
-            <div className="mt-5 flex items-center gap-2 rounded-full border border-border bg-night/60 px-3 py-1.5">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-secondary/70" />
-              <span className="text-[0.65rem] font-medium uppercase tracking-widest text-secondary">
-                Offline
-              </span>
-            </div>
           </motion.div>
 
           <motion.div variants={listInner} className="min-w-0 space-y-8">
             <motion.header variants={item}>
-              <h1 className="text-2xl font-semibold tracking-tight text-primary">
-                Perfil
-              </h1>
-              <p className="mt-1.5 max-w-md text-sm leading-relaxed text-secondary">
-                Nome público, concurso-alvo e preferências de foco
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-primary">
+                    Perfil
+                  </h1>
+                  <p className="mt-1.5 max-w-md text-sm leading-relaxed text-secondary">
+                    Nome público, concurso-alvo e preferências de foco
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="shrink-0 rounded-xl border border-firefly/30 bg-firefly/10 px-4 py-2 text-sm font-medium text-firefly transition hover:border-firefly/50 hover:brightness-110"
+                >
+                  Editar Perfil
+                </button>
+              </div>
             </motion.header>
 
             <motion.div variants={item} className="space-y-6">
               <FieldBlock label="Nome">{nameLine}</FieldBlock>
 
-              <FieldBlock label="Hub principal">
-                <span className="inline-flex items-center gap-2">
-                  <HubGlyph />
-                  <span>{hubLine}</span>
-                </span>
+              <FieldBlock label="Hubs Favoritos">
+                {hubsLoading ? (
+                  <span className="text-secondary">Carregando…</span>
+                ) : joinedHubs.length === 0 ? (
+                  <p className="text-secondary">
+                    Nenhum hub favorito ainda.{' '}
+                    <Link
+                      to="/hubs"
+                      className="text-firefly underline-offset-2 hover:underline"
+                    >
+                      Explorar hubs
+                    </Link>
+                  </p>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {joinedHubs.map((hub) => (
+                      <FavoriteHubCard key={hub.id} hub={hub} />
+                    ))}
+                  </div>
+                )}
               </FieldBlock>
 
               <FieldBlock label="Concurso-alvo">{examLine}</FieldBlock>
@@ -231,80 +256,24 @@ export function ProfilePage() {
                 </motion.span>
               </FieldBlock>
             </motion.div>
-
-            <motion.div variants={item} className="h-px bg-border" />
-
-            <motion.section variants={item} className="space-y-4">
-              <motion.div>
-                <h2 className="text-sm font-semibold text-primary">Definir foco</h2>
-                <p className="mt-1 text-sm text-secondary">
-                  Atualize seu concurso-alvo e bio públicos
-                </p>
-              </motion.div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <label className="block text-sm text-secondary" htmlFor="profile-target-exam">
-                  Concurso-alvo
-                  <input
-                    id="profile-target-exam"
-                    type="text"
-                    value={targetExamInput}
-                    onChange={(e) => {
-                      setTargetExamInput(e.target.value)
-                      setFormError(null)
-                      setFormSuccess(null)
-                    }}
-                    placeholder="policia-federal"
-                    autoComplete="off"
-                    className={inputClass}
-                    disabled={isSaving}
-                  />
-                </label>
-
-                <label className="block text-sm text-secondary" htmlFor="profile-bio">
-                  Bio
-                  <textarea
-                    id="profile-bio"
-                    value={bioInput}
-                    onChange={(e) => {
-                      setBioInput(e.target.value)
-                      setFormError(null)
-                      setFormSuccess(null)
-                    }}
-                    placeholder="Estudando 4h por dia. Rumo à aprovação!"
-                    rows={4}
-                    maxLength={MAX_BIO_LENGTH}
-                    className={`${inputClass} resize-y`}
-                    disabled={isSaving}
-                  />
-                </label>
-
-                {(formError || formSuccess) && (
-                  <p
-                    role="status"
-                    className={
-                      formError
-                        ? 'text-sm text-coral'
-                        : 'text-sm text-firefly'
-                    }
-                  >
-                    {formError ?? formSuccess}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  aria-busy={isSaving}
-                  className="rounded-xl bg-firefly px-5 py-2.5 text-sm font-medium text-night transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSaving ? 'Salvando…' : 'Salvar foco'}
-                </button>
-              </form>
-            </motion.section>
           </motion.div>
         </motion.div>
       </motion.article>
+
+      <EditProfileModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        prefersReducedMotion={reducedMotion}
+        initialValues={editInitialValues}
+        onSave={handleSaveProfile}
+        isSubmitting={isSubmitting}
+      />
+
+      <AppToast
+        message={toast.message}
+        visible={toast.visible}
+        onDismiss={() => setToast((t) => ({ ...t, visible: false }))}
+      />
     </div>
   )
 }

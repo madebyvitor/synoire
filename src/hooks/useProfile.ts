@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   getProfile,
-  updateProfileFocus,
+  updateProfile,
   type ProfileView,
-  type UpdateProfileFocusInput,
+  type UpdateProfileInput,
 } from '@/lib/profile'
 
 export function useProfile() {
@@ -54,15 +54,15 @@ export function useProfile() {
     }
   }, [user?.id, authLoading])
 
-  const updateFocus = useCallback(
-    async (input: UpdateProfileFocusInput): Promise<{ ok: true } | { ok: false; message: string }> => {
+  const updateProfileState = useCallback(
+    async (input: UpdateProfileInput): Promise<{ ok: true } | { ok: false; message: string }> => {
       const userId = user?.id
       if (!userId) {
         return { ok: false, message: 'Entre na sua conta para atualizar o perfil.' }
       }
 
       setIsSaving(true)
-      const result = await updateProfileFocus(userId, input)
+      const result = await updateProfile(userId, input)
       setIsSaving(false)
 
       if (result.ok) {
@@ -80,6 +80,6 @@ export function useProfile() {
     isLoading: authLoading || isLoading,
     error,
     isSaving,
-    updateFocus,
+    updateProfile: updateProfileState,
   }
 }

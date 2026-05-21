@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { GlowPaywallModal } from '@/components/premium/GlowPaywallModal'
 import { AppShell } from '@/components/layout/AppShell'
+import { WeeklyGoalGate } from '@/components/layout/WeeklyGoalGate'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { GlobalPresenceProvider } from '@/contexts/GlobalPresenceContext'
 import { HubsProvider } from '@/contexts/HubsContext'
@@ -25,10 +26,12 @@ export function AppRoutes() {
       <Route path="/salas/:roomId" element={<RoomPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route path="/painel" element={<DashboardPage />} />
-          <Route path="/hubs" element={<HubsPage />} />
-          <Route path="/hubs/:slug" element={<HubDetailPage />} />
-          <Route path="/perfil" element={<ProfilePage />} />
+          <Route element={<WeeklyGoalGate />}>
+            <Route path="/painel" element={<DashboardPage />} />
+            <Route path="/hubs" element={<HubsPage />} />
+            <Route path="/hubs/:slug" element={<HubDetailPage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
