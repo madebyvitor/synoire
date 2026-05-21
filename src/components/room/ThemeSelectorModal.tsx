@@ -292,10 +292,6 @@ export function ThemeSelectorModal({
                   >
                     [ Fazer upload de .mp3 ]
                   </button>
-                  <p className="text-xs text-secondary">
-                    O ficheiro não é enviado ao servidor — reprodução apenas no
-                    seu navegador.
-                  </p>
                   {sound.playbackMode === 'embed' && (
                     <p className="text-xs text-aqua">
                       Volume e pausa do link externo dependem do player
