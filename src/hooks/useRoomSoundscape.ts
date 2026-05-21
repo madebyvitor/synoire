@@ -4,6 +4,10 @@ import {
   readCustomMediaUrl,
   writeCustomMediaUrl,
 } from '@/lib/roomMedia/storage'
+import {
+  getDefaultPlaylistTracks,
+  getNextPlaylistTrack,
+} from '@/lib/soundscapes/defaultPlaylist'
 
 const VOLUME_KEY = 'synoire-room-sound-volume'
 const FOCUS_CHIME_SRC = '/soundscapes/focus-chime.mp3'
@@ -12,6 +16,10 @@ const CHIME_VOLUME = 0.25
 export type RoomPlaybackMode = 'library' | 'custom-file' | 'embed' | 'idle'
 
 export type ExternalEmbed = ParsedMediaUrl
+
+export type UseRoomSoundscapeOptions = {
+  defaultPlaylistAutoplay?: boolean
+}
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n))
@@ -46,11 +54,15 @@ async function fadeVolume(
   })
 }
 
-export function useRoomSoundscape() {
+export function useRoomSoundscape(options?: UseRoomSoundscapeOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const chimeRef = useRef<HTMLAudioElement | null>(null)
   const customUrlRef = useRef<string | null>(null)
   const lastAmbientRef = useRef<{ src: string; label: string } | null>(null)
+  const defaultPlaylistAutoplayRef = useRef(
+    options?.defaultPlaylistAutoplay ?? false,
+  )
+  const playbackModeRef = useRef<RoomPlaybackMode>('idle')
   const [userVolume, setUserVolume] = useState(readStoredVolume)
   const userVolRef = useRef(userVolume)
   userVolRef.current = userVolume
@@ -61,6 +73,16 @@ export function useRoomSoundscape() {
   )
   const [playbackMode, setPlaybackMode] = useState<RoomPlaybackMode>('idle')
   const busyRef = useRef(false)
+
+  playbackModeRef.current = playbackMode
+
+  useEffect(() => {
+    defaultPlaylistAutoplayRef.current = options?.defaultPlaylistAutoplay ?? false
+    const a = audioRef.current
+    if (a && playbackMode === 'library') {
+      a.loop = !defaultPlaylistAutoplayRef.current
+    }
+  }, [options?.defaultPlaylistAutoplay, playbackMode])
 
   const clearCustomBlob = useCallback(() => {
     if (customUrlRef.current) {
@@ -74,17 +96,62 @@ export function useRoomSoundscape() {
     writeCustomMediaUrl(null)
   }, [])
 
+  const advancePlaylistTrackRef = useRef<() => void>(() => {})
+
+  const advancePlaylistTrack = useCallback(async () => {
+    if (busyRef.current) return
+    if (!defaultPlaylistAutoplayRef.current) return
+    if (playbackModeRef.current !== 'library') return
+
+    const current = lastAmbientRef.current
+    if (!current) return
+
+    const tracks = getDefaultPlaylistTracks(true)
+    const next = getNextPlaylistTrack(current.src, tracks)
+    if (!next) return
+
+    const a = audioRef.current
+    if (!a) return
+
+    busyRef.current = true
+    try {
+      if (a.src && !a.paused) {
+        await fadeVolume(a, a.volume, 0, 240)
+        a.pause()
+      }
+      a.loop = false
+      a.src = next.file
+      a.volume = 0
+      await a.play()
+      setActiveLabel(next.label)
+      lastAmbientRef.current = { src: next.file, label: next.label }
+      await fadeVolume(a, 0, userVolRef.current, 380)
+    } catch {
+      /* autoplay blocked or missing asset */
+    }
+    busyRef.current = false
+  }, [])
+
+  advancePlaylistTrackRef.current = () => {
+    void advancePlaylistTrack()
+  }
+
+  const onAudioEnded = useCallback(() => {
+    advancePlaylistTrackRef.current()
+  }, [])
+
   const ensureAudio = useCallback(() => {
     if (!audioRef.current) {
       const a = new Audio()
       a.loop = true
       a.preload = 'auto'
+      a.addEventListener('ended', onAudioEnded)
       audioRef.current = a
       a.addEventListener('play', () => setIsPlaying(true))
       a.addEventListener('pause', () => setIsPlaying(false))
     }
     return audioRef.current
-  }, [])
+  }, [onAudioEnded])
 
   useEffect(() => {
     try {
@@ -120,6 +187,7 @@ export function useRoomSoundscape() {
         await fadeVolume(a, a.volume, 0, 240)
         a.pause()
       }
+      a.loop = !defaultPlaylistAutoplayRef.current
       a.src = src
       a.volume = 0
       try {
@@ -157,6 +225,7 @@ export function useRoomSoundscape() {
         await fadeVolume(a, a.volume, 0, 240)
         a.pause()
       }
+      a.loop = true
       a.src = url
       a.volume = 0
       try {
@@ -271,12 +340,14 @@ export function useRoomSoundscape() {
 
   useEffect(() => {
     return () => {
+      const a = audioRef.current
+      if (a) a.removeEventListener('ended', onAudioEnded)
       void stopInternal()
       clearCustomBlob()
       chimeRef.current = null
       audioRef.current = null
     }
-  }, [clearCustomBlob, stopInternal])
+  }, [clearCustomBlob, onAudioEnded, stopInternal])
 
   return {
     userVolume,

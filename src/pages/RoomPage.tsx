@@ -125,7 +125,7 @@ export function RoomPage() {
   const loungeWaitTargetRef = useRef<LoungeWaitTarget | null>(null)
   const loungeEnteredPhaseRef = useRef<RoomPhase | 'prep' | null>(null)
 
-  const sound = useRoomSoundscape()
+  const sound = useRoomSoundscape({ defaultPlaylistAutoplay: hasGlowAccess })
 
   const handleSelectTheme = useCallback(
     (id: ImmersiveThemeId) => {
