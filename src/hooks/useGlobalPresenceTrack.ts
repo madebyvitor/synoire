@@ -1,12 +1,8 @@
 import { useEffect } from 'react'
 import { useGlobalPresence } from '@/contexts/GlobalPresenceContext'
-import type { GlobalPresenceStatus } from '@/lib/presence/globalPresence'
+import type { GlobalPresenceTrackInput } from '@/lib/presence/globalPresence'
 
-export type GlobalPresenceTrackInput = {
-  status: GlobalPresenceStatus
-  current_room: string | null
-  room_id: string | null
-}
+export type { GlobalPresenceTrackInput }
 
 export function useGlobalPresenceTrack(input: GlobalPresenceTrackInput | null) {
   const { trackPresence } = useGlobalPresence()

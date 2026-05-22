@@ -10,6 +10,7 @@ import { InvitePartnersModal } from '@/components/room/InvitePartnersModal'
 import { ThemeSelectorModal } from '@/components/room/ThemeSelectorModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStudyPartners } from '@/contexts/StudyPartnersContext'
+import { useAuthenticatedGlobalPresence } from '@/hooks/useAuthenticatedGlobalPresence'
 import { useUserPlan } from '@/contexts/UserPlanContext'
 import { useGlobalRoomTimer } from '@/hooks/useGlobalRoomTimer'
 import { useImmersiveTheme } from '@/hooks/useImmersiveTheme'
@@ -69,6 +70,15 @@ export function RoomPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { room: studyRoom, entryStatus, entryMessage } = useRoomEntry(roomId)
+
+  useAuthenticatedGlobalPresence({
+    enabled: Boolean(roomId),
+    pathname: location.pathname,
+    roomId,
+    room: studyRoom,
+    resetToOnlineOnUnmount: true,
+  })
+
   const title = useMemo(
     () =>
       formatRoomDisplayTitle(

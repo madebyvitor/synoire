@@ -6,8 +6,17 @@ export type { PartnerPresenceEntry }
 
 function toPartnerEntry(
   global: { status: string; current_room: string | null; room_id: string | null } | undefined,
+  presenceSynced: boolean,
 ): PartnerPresenceEntry {
   if (!global) {
+    if (!presenceSynced) {
+      return {
+        presenceStatus: 'unknown',
+        isOnline: false,
+        roomId: null,
+        roomLabel: null,
+      }
+    }
     return {
       presenceStatus: 'offline',
       isOnline: false,
@@ -45,15 +54,15 @@ function toPartnerEntry(
 export function usePartnerPresence(
   partnerUserIds: string[],
 ): Map<string, PartnerPresenceEntry> {
-  const { presenceByUserId, presenceVersion } = useGlobalPresence()
+  const { presenceByUserId, presenceVersion, presenceSynced } = useGlobalPresence()
   const idsKey = partnerUserIds.join(',')
 
   return useMemo(() => {
     const map = new Map<string, PartnerPresenceEntry>()
     for (const id of partnerUserIds) {
       if (!id) continue
-      map.set(id, toPartnerEntry(presenceByUserId.get(id)))
+      map.set(id, toPartnerEntry(presenceByUserId.get(id), presenceSynced))
     }
     return map
-  }, [idsKey, partnerUserIds, presenceByUserId, presenceVersion])
+  }, [idsKey, partnerUserIds, presenceByUserId, presenceVersion, presenceSynced])
 }

@@ -15,7 +15,7 @@ function toView(
   if (!profile) return null
 
   const presenceEntry = presence.get(partnership.partnerUserId)
-  const presenceStatus = presenceEntry?.presenceStatus ?? 'offline'
+  const presenceStatus = presenceEntry?.presenceStatus ?? 'unknown'
 
   return {
     id: profile.id,
@@ -45,6 +45,7 @@ export function buildPartnerLists(
   const focusingPartners = acceptedPartners.filter((v) => v.presenceStatus === 'focando')
   const onlinePartners = acceptedPartners.filter((v) => v.presenceStatus === 'online')
   const offlinePartners = acceptedPartners.filter((v) => v.presenceStatus === 'offline')
+  // Partners with presenceStatus 'unknown' are omitted until the first presence sync.
   const incomingInvites = views.filter((v) => v.partnershipStatus === 'pending_incoming')
   const outgoingInvites = views.filter((v) => v.partnershipStatus === 'pending_outgoing')
 

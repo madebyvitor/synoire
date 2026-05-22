@@ -6,6 +6,7 @@ import { InvitePartnerModal } from '@/components/dashboard/InvitePartnerModal'
 import { AppToast } from '@/components/ui/AppToast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRoomInvites } from '@/contexts/RoomInvitesContext'
+import { useGlobalPresence } from '@/contexts/GlobalPresenceContext'
 import { useStudyPartners } from '@/contexts/StudyPartnersContext'
 import { canJoinRoom } from '@/lib/roomAccess'
 import type { IncomingRoomInvite } from '@/lib/roomAccess'
@@ -233,6 +234,7 @@ export function StudyPartnersSidebar({
     acceptRoomInvite,
     declineRoomInvite,
   } = useRoomInvites()
+  const { presenceSynced } = useGlobalPresence()
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const [isSendingInvite, setIsSendingInvite] = useState(false)
@@ -394,6 +396,11 @@ export function StudyPartnersSidebar({
                 <p className="px-4 py-6 text-xs text-secondary">Carregando parceiros…</p>
               ) : (
                 <>
+              {!presenceSynced && (
+                <p className="border-b border-white/5 px-4 py-2 text-xs text-secondary">
+                  Atualizando presença…
+                </p>
+              )}
               <Section
                 title="Focando agora"
                 empty={

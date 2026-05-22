@@ -28,7 +28,7 @@ export type PartnerProfileEnrichment = {
   currentStreak: number
 }
 
-export type PartnerPresenceStatus = 'offline' | 'online' | 'focando'
+export type PartnerPresenceStatus = 'offline' | 'online' | 'focando' | 'unknown'
 
 export type PartnerPresenceEntry = {
   presenceStatus: PartnerPresenceStatus

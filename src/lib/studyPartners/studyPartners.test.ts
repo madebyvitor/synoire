@@ -199,7 +199,7 @@ describe('buildPartnerLists', () => {
     ['user-lucas', enrichment('user-lucas', 'lucas_pf')],
   ])
 
-  it('splits accepted into offline when absent from presence', () => {
+  it('omits partners with unknown presence until sync', () => {
     const partnerships: MappedPartnership[] = [
       {
         id: 'ps-a',
@@ -208,10 +208,45 @@ describe('buildPartnerLists', () => {
         createdAt: '2026-05-18T12:00:00Z',
       },
     ]
-    const lists = buildPartnerLists(partnerships, enrich)
+    const presence = new Map([
+      [
+        PARTNER,
+        {
+          presenceStatus: 'unknown' as const,
+          isOnline: false,
+          roomId: null,
+          roomLabel: null,
+        },
+      ],
+    ])
+    const lists = buildPartnerLists(partnerships, enrich, presence)
     expect(lists.acceptedPartners).toHaveLength(1)
     expect(lists.focusingPartners).toHaveLength(0)
     expect(lists.onlinePartners).toHaveLength(0)
+    expect(lists.offlinePartners).toHaveLength(0)
+  })
+
+  it('splits accepted into offline when presence is synced and absent', () => {
+    const partnerships: MappedPartnership[] = [
+      {
+        id: 'ps-a',
+        partnerUserId: PARTNER,
+        status: 'accepted',
+        createdAt: '2026-05-18T12:00:00Z',
+      },
+    ]
+    const presence = new Map([
+      [
+        PARTNER,
+        {
+          presenceStatus: 'offline' as const,
+          isOnline: false,
+          roomId: null,
+          roomLabel: null,
+        },
+      ],
+    ])
+    const lists = buildPartnerLists(partnerships, enrich, presence)
     expect(lists.offlinePartners).toHaveLength(1)
     expect(lists.offlinePartners[0]?.presenceStatus).toBe('offline')
   })

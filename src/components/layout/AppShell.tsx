@@ -4,7 +4,6 @@ import { StudyPartnersSidebar } from '@/components/dashboard/StudyPartnersSideba
 import { AppAtmosphere } from '@/components/layout/AppAtmosphere'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStudyPartners } from '@/contexts/StudyPartnersContext'
-import { useGlobalPresenceTrack } from '@/hooks/useGlobalPresenceTrack'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
@@ -169,16 +168,10 @@ function PartnersNavButton({
 }
 
 export function AppShell() {
-  const { isAuthenticated } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [partnersOpen, setPartnersOpen] = useState(false)
   const location = useLocation()
 
-  useGlobalPresenceTrack(
-    isAuthenticated
-      ? { status: 'online', current_room: null, room_id: null }
-      : null,
-  )
   const menuPanelId = useId()
   const prefersReducedMotion = usePrefersReducedMotion()
   const { incomingInvites } = useStudyPartners()

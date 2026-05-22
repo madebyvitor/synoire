@@ -53,12 +53,12 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
     () => partnerships.map((p) => p.partnerUserId),
     [partnerships],
   )
-  const { presenceVersion } = useGlobalPresence()
+  const { presenceVersion, presenceSynced } = useGlobalPresence()
   const presence = usePartnerPresence(partnerUserIds)
 
   const lists = useMemo(
     () => buildPartnerLists(partnerships, enrichment, presence),
-    [partnerships, enrichment, presence, presenceVersion],
+    [partnerships, enrichment, presence, presenceVersion, presenceSynced],
   )
 
   const applyRealtimeSideEffects = useCallback((result: ApplyPartnershipRealtimeResult) => {
