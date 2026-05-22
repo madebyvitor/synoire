@@ -194,6 +194,51 @@ describe('updateProfile', () => {
     expect(eqUpdateMock).toHaveBeenCalledWith('id', 'u1')
   })
 
+  it('includes avatar_url when avatarUrl is provided', async () => {
+    singleMock.mockResolvedValue({
+      data: {
+        id: 'u1',
+        username: 'vitor',
+        avatar_url: 'https://example.com/avatar.jpg',
+        target_exam: 'bb',
+        bio: '',
+      },
+      error: null,
+    })
+    const result = await updateProfile('u1', {
+      username: 'vitor',
+      targetExam: 'bb',
+      bio: '',
+      avatarUrl: 'https://example.com/avatar.jpg',
+    })
+    expect(result.ok).toBe(true)
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        avatar_url: 'https://example.com/avatar.jpg',
+      }),
+    )
+  })
+
+  it('omits avatar_url when avatarUrl is not provided', async () => {
+    singleMock.mockResolvedValue({
+      data: {
+        id: 'u1',
+        username: 'vitor',
+        avatar_url: 'https://example.com/old.jpg',
+        target_exam: 'bb',
+        bio: '',
+      },
+      error: null,
+    })
+    await updateProfile('u1', {
+      username: 'vitor',
+      targetExam: 'bb',
+      bio: '',
+    })
+    const payload = updateMock.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(payload).not.toHaveProperty('avatar_url')
+  })
+
   it('maps supabase errors', async () => {
     singleMock.mockResolvedValue({
       data: null,

@@ -6,6 +6,7 @@ import type { EditProfileSavePayload } from '@/components/profile/EditProfileMod
 import { SettingsModal } from '@/components/profile/SettingsModal'
 import { FavoriteHubCard } from '@/components/profile/FavoriteHubCard'
 import { AppToast } from '@/components/ui/AppToast'
+import { useAuth } from '@/contexts/AuthContext'
 import { useJoinedHubs } from '@/contexts/JoinedHubsContext'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { useProfile } from '@/hooks/useProfile'
@@ -76,6 +77,7 @@ function SettingsGearIcon({ className }: { className?: string }) {
 
 export function ProfilePage() {
   const reducedMotion = usePrefersReducedMotion()
+  const { user } = useAuth()
   const { profile, isLoading, error, isSaving, updateProfile } = useProfile()
   const {
     stats,
@@ -122,6 +124,7 @@ export function ProfilePage() {
           username: payload.username,
           targetExam: payload.targetExam,
           bio: payload.bio,
+          ...(payload.avatarUrl !== undefined ? { avatarUrl: payload.avatarUrl } : {}),
         }),
       ])
 
@@ -200,8 +203,16 @@ export function ProfilePage() {
                   }}
                 />
               )}
-              <motion.div className="relative flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full bg-gradient-to-br from-firefly to-aqua text-lg font-bold tracking-tight text-night shadow-[0_0_0_3px_rgba(163,163,79,0.35),0_0_28px_rgba(163,163,79,0.2)]">
-                {initials}
+              <motion.div className="relative flex h-[5.5rem] w-[5.5rem] items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-firefly to-aqua text-lg font-bold tracking-tight text-night shadow-[0_0_0_3px_rgba(163,163,79,0.35),0_0_28px_rgba(163,163,79,0.2)]">
+                {profile?.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
               </motion.div>
             </motion.div>
           </motion.div>
@@ -290,14 +301,20 @@ export function ProfilePage() {
         </motion.div>
       </motion.article>
 
-      <EditProfileModal
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        prefersReducedMotion={reducedMotion}
-        initialValues={editInitialValues}
-        onSave={handleSaveProfile}
-        isSubmitting={isSubmitting}
-      />
+      {user?.id && (
+        <EditProfileModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          prefersReducedMotion={reducedMotion}
+          initialValues={editInitialValues}
+          userId={user.id}
+          initialAvatarUrl={profile?.avatarUrl ?? null}
+          displayName={profile?.displayName ?? ''}
+          onToast={(message) => setToast({ message, visible: true })}
+          onSave={handleSaveProfile}
+          isSubmitting={isSubmitting}
+        />
+      )}
 
       <SettingsModal
         open={settingsOpen}

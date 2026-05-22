@@ -7,6 +7,7 @@ export type UpdateProfileInput = {
   username: string
   targetExam: string
   bio: string
+  avatarUrl?: string
 }
 
 export type UpdateProfileResult =
@@ -66,14 +67,19 @@ export async function updateProfile(
   const target_exam = input.targetExam.trim()
   const bio = input.bio.trim() || null
 
+  const patch: Record<string, string | null> = {
+    username,
+    target_exam,
+    bio,
+    updated_at: new Date().toISOString(),
+  }
+  if (input.avatarUrl !== undefined) {
+    patch.avatar_url = input.avatarUrl
+  }
+
   const { data, error } = await supabase
     .from('profiles')
-    .update({
-      username,
-      target_exam,
-      bio,
-      updated_at: new Date().toISOString(),
-    })
+    .update(patch)
     .eq('id', userId)
     .select()
     .single()

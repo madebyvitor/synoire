@@ -11,5 +11,6 @@ export {
   type UpdateProfileInput,
   type UpdateProfileResult,
 } from './updateProfile'
+export { uploadAvatar, type UploadAvatarResult } from './uploadAvatar'
 export { validateUsername } from './validateUsername'
 export { mapProfileRow, type ProfileRow, type ProfileView } from './types'
