@@ -6,7 +6,7 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 const MOCK_PRESENT = 28
 
 type StudyRoomPreviewProps = {
-  size?: 'compact' | 'cinema' | 'hero'
+  size?: 'compact' | 'cinema'
   className?: string
   lazy?: boolean
 }
@@ -38,55 +38,6 @@ export function StudyRoomPreview({
   }, [lazy, active])
 
   const isCinema = size === 'cinema'
-  const isHero = size === 'hero'
-
-  if (isHero) {
-    return (
-      <div
-        role="img"
-        aria-label="Prévia da sala de foco Synoire com timer Pomodoro"
-        className={`overflow-hidden rounded-2xl border border-border/80 bg-[#0a0c0f] shadow-[0_0_0_1px_rgba(0,0,0,0.35),0_32px_64px_-16px_rgba(0,0,0,0.65)] ${className}`}
-      >
-        <div
-          className="relative flex items-center border-b border-border/50 px-4 py-3"
-          aria-hidden
-        >
-          <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-          </div>
-          <p className="pointer-events-none absolute inset-x-0 text-center text-xs text-secondary">
-            Sala de foco / Trabalho profundo
-          </p>
-        </div>
-
-        <div
-          className="flex flex-col items-center px-6 py-12 md:py-14"
-          aria-hidden
-        >
-          <motion.p
-            className="font-serif text-5xl font-medium tabular-nums tracking-tight text-primary md:text-6xl"
-            animate={
-              reduced
-                ? undefined
-                : { opacity: [0.92, 1, 0.92] }
-            }
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            25:00
-          </motion.p>
-          <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.2em] text-secondary sm:text-xs">
-            Sessão de foco · Rodada 2 de 4
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   const heightClass = isCinema
     ? 'min-h-[min(72vh,520px)] sm:min-h-[min(68vh,560px)]'

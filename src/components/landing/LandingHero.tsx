@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
+import { FocusCoreVisual } from '@/components/landing/FocusCoreVisual'
 import { NightAtmosphere } from '@/components/landing/NightAtmosphere'
-import { StudyRoomPreview } from '@/components/landing/StudyRoomPreview'
 import { Eyebrow, LandingButton } from '@/components/landing/primitives'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import {
@@ -67,26 +67,20 @@ export function LandingHero() {
             className="inline-block rounded-xl"
           >
             <LandingButton to="/entrar" className="px-8 py-3.5 text-base">
-              Criar conta gratuita
+              Criar conta
             </LandingButton>
           </motion.div>
         </motion.div>
+      </motion.div>
 
-        <motion.div
-          variants={floatItem}
-          className="mt-16 w-full max-w-lg md:mt-20 md:max-w-xl"
-        >
-          <motion.div
-            animate={reduced ? undefined : { y: [0, -8, 0] }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            <StudyRoomPreview size="hero" />
-          </motion.div>
-        </motion.div>
+      <motion.div
+        variants={floatItem}
+        initial={reduced ? false : 'hidden'}
+        animate="visible"
+        transition={reduced ? undefined : { delay: 0.55 }}
+        className="relative z-10 mx-auto mt-16 w-full max-w-5xl px-6 md:mt-20 lg:max-w-6xl"
+      >
+        <FocusCoreVisual />
       </motion.div>
     </section>
   )
