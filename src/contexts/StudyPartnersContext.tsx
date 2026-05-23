@@ -40,7 +40,7 @@ type StudyPartnersContextValue = PartnerLists & {
 const StudyPartnersContext = createContext<StudyPartnersContextValue | null>(null)
 
 export function StudyPartnersProvider({ children }: { children: ReactNode }) {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isSessionReady } = useAuth()
   const [partnerships, setPartnerships] = useState<MappedPartnership[]>([])
   const [enrichment, setEnrichment] = useState(
     () => new Map<string, PartnerProfileEnrichment>(),
@@ -123,13 +123,13 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
   }, [user?.id])
 
   useEffect(() => {
-    if (authLoading) return
+    if (!isSessionReady) return
     void refresh()
-  }, [authLoading, refresh])
+  }, [isSessionReady, refresh])
 
   useEffect(() => {
     const userId = user?.id
-    if (!userId || authLoading || isDemoMode || !isSupabaseConfigured) return
+    if (!userId || !isSessionReady || isDemoMode || !isSupabaseConfigured) return
 
     return subscribePartnershipsRealtime(userId, (event) => {
       let sideEffect: ApplyPartnershipRealtimeResult | null = null
@@ -140,7 +140,7 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
       })
       if (sideEffect) applyRealtimeSideEffects(sideEffect)
     })
-  }, [user?.id, authLoading, applyRealtimeSideEffects])
+  }, [user?.id, isSessionReady, applyRealtimeSideEffects])
 
   const sendInvite = useCallback(
     async (username: string): Promise<SendInviteResult> => {
@@ -198,14 +198,14 @@ export function StudyPartnersProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       ...lists,
-      isLoading: authLoading || isLoading,
+      isLoading: !isSessionReady || isLoading,
       error,
       sendPartnerInvite: sendInvite,
       acceptInvite,
       declineInvite,
       refresh,
     }),
-    [lists, authLoading, isLoading, error, sendInvite, acceptInvite, declineInvite, refresh],
+    [lists, isSessionReady, isLoading, error, sendInvite, acceptInvite, declineInvite, refresh],
   )
 
   return (

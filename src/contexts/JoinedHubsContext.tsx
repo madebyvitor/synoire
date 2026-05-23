@@ -34,7 +34,7 @@ type JoinedHubsContextValue = {
 const JoinedHubsContext = createContext<JoinedHubsContextValue | null>(null)
 
 export function JoinedHubsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, isSessionReady } = useAuth()
   const { getHubId } = useHubs()
   const { hasGlowAccess, openPaywall } = useUserPlan()
   const [joinedHubs, setJoinedHubs] = useState<HubView[]>([])
@@ -46,7 +46,7 @@ export function JoinedHubsProvider({ children }: { children: ReactNode }) {
   )
 
   const refreshJoined = useCallback(async () => {
-    if (!user?.id) {
+    if (!isSessionReady || !user?.id) {
       setJoinedHubs([])
       setIsLoading(false)
       return
@@ -59,7 +59,7 @@ export function JoinedHubsProvider({ children }: { children: ReactNode }) {
       setJoinedHubs([])
     }
     setIsLoading(false)
-  }, [user?.id])
+  }, [isSessionReady, user?.id])
 
   useEffect(() => {
     void refreshJoined()

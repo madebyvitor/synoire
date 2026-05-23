@@ -13,7 +13,7 @@ const DEFAULT_STATS: UserStatsView = {
 }
 
 export function useUserStats() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isSessionReady } = useAuth()
   const [stats, setStats] = useState<UserStatsView>(DEFAULT_STATS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,9 +43,9 @@ export function useUserStats() {
   }, [user?.id])
 
   useEffect(() => {
-    if (authLoading) return
+    if (!isSessionReady) return
     void refresh()
-  }, [authLoading, refresh])
+  }, [isSessionReady, refresh])
 
   const saveWeeklyGoal = useCallback(
     async (hours: number): Promise<{ ok: true } | { ok: false; message: string }> => {
@@ -73,7 +73,7 @@ export function useUserStats() {
 
   return {
     stats,
-    isLoading: authLoading || isLoading,
+    isLoading: !isSessionReady || isLoading,
     error,
     isSaving,
     refresh,

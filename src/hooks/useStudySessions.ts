@@ -7,7 +7,7 @@ import {
 } from '@/lib/studySessions'
 
 export function useStudySessions() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isSessionReady } = useAuth()
   const [sessions, setSessions] = useState<StudySessionView[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,9 +37,9 @@ export function useStudySessions() {
   }, [user?.id])
 
   useEffect(() => {
-    if (authLoading) return
+    if (!isSessionReady) return
     void refresh()
-  }, [authLoading, refresh])
+  }, [isSessionReady, refresh])
 
   const recordSession = useCallback(
     async (
@@ -67,7 +67,7 @@ export function useStudySessions() {
 
   return {
     sessions,
-    isLoading: authLoading || isLoading,
+    isLoading: !isSessionReady || isLoading,
     error,
     isRecording,
     refresh,

@@ -14,6 +14,15 @@ O servidor só aplica o timeout no próximo refresh do token (duração efetiva 
 
 Para outro limite no cliente, defina `VITE_SESSION_IDLE_MINUTES` no `.env`.
 
+## Login com Google (OAuth)
+
+1. No Dashboard: **Authentication → Providers → Google** — habilitar e preencher Client ID / Secret do Google Cloud Console.
+2. **Authentication → URL Configuration**:
+   - **Site URL**: `http://localhost:5173` (dev) e/ou a URL de produção (ex.: `https://seu-app.netlify.app`).
+   - **Redirect URLs**: `http://localhost:5173/**` e `https://seu-app.netlify.app/**` (ajuste o domínio de produção).
+
+O front-end chama `signInWithOAuth({ provider: 'google', options: { redirectTo: '{origin}/painel' } })`. Após o consentimento no Google, o usuário volta em `/painel`; o cliente Supabase (`detectSessionInUrl: true`) restaura a sessão automaticamente. Novos usuários recebem `profiles` e `user_stats` via trigger `handle_new_user`.
+
 ## Migrações
 
 ```bash

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
   MIN_PASSWORD_LENGTH,
   signIn,
+  signInWithGoogle,
   signUp,
   validateSignInInput,
   validateSignUpInput,
@@ -105,6 +106,23 @@ export function AuthPage() {
       return
     }
     navigate('/painel')
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError(null)
+    setInfo(null)
+
+    if (!supabaseReady) {
+      setError('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env.')
+      return
+    }
+
+    setIsSubmitting(true)
+    const result = await signInWithGoogle()
+    if (!result.ok) {
+      setIsSubmitting(false)
+      setError(result.message)
+    }
   }
 
   const canSubmit =
@@ -268,13 +286,20 @@ export function AuthPage() {
         </button>
       </motion.form>
 
+      <motion.div variants={item} className="mt-4 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" aria-hidden />
+        <span className="text-xs text-secondary">ou</span>
+        <span className="h-px flex-1 bg-border" aria-hidden />
+      </motion.div>
+
       <motion.div variants={item} className="mt-4">
         <button
           type="button"
-          disabled
-          className="w-full cursor-not-allowed rounded-xl border border-border bg-surface px-4 py-3 text-left text-sm text-secondary opacity-60"
+          disabled={!supabaseReady || isSubmitting}
+          onClick={() => void handleGoogleSignIn()}
+          className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-primary transition hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Continuar com Google (em breve)
+          Continuar com Google
         </button>
       </motion.div>
 

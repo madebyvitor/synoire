@@ -8,7 +8,7 @@ import {
 } from '@/lib/profile'
 
 export function useProfile() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading, isSessionReady } = useAuth()
   const [profile, setProfile] = useState<ProfileView | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,7 +18,16 @@ export function useProfile() {
     let cancelled = false
 
     async function load() {
-      if (authLoading) return
+      if (!isSessionReady) {
+        if (!authLoading && !user?.id) {
+          if (!cancelled) {
+            setProfile(null)
+            setError(null)
+            setIsLoading(false)
+          }
+        }
+        return
+      }
 
       const userId = user?.id
       if (!userId) {
@@ -52,7 +61,7 @@ export function useProfile() {
     return () => {
       cancelled = true
     }
-  }, [user?.id, authLoading])
+  }, [user?.id, authLoading, isSessionReady])
 
   const updateProfileState = useCallback(
     async (input: UpdateProfileInput): Promise<{ ok: true } | { ok: false; message: string }> => {
@@ -77,7 +86,7 @@ export function useProfile() {
 
   return {
     profile,
-    isLoading: authLoading || isLoading,
+    isLoading: !isSessionReady || isLoading,
     error,
     isSaving,
     updateProfile: updateProfileState,

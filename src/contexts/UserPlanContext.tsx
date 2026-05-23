@@ -60,7 +60,7 @@ async function fetchPlanTierFromDb(): Promise<PlanTier> {
 }
 
 export function UserPlanProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, isLoading: authLoading, isSessionReady } = useAuth()
   const [planTier, setPlanTierState] = useState<PlanTier>(() => readDevPlanTier() ?? 'free')
   const [isLoading, setIsLoading] = useState(true)
   const [paywallOpen, setPaywallOpen] = useState(false)
@@ -133,6 +133,11 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      if (!isSessionReady) {
+        if (!cancelled) setIsLoading(authLoading)
+        return
+      }
+
       setIsLoading(true)
       try {
         const tier = await fetchPlanTierFromDb()
@@ -148,7 +153,7 @@ export function UserPlanProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [user?.id])
+  }, [user?.id, isSessionReady, authLoading])
 
   const setPlanTier = useCallback((tier: PlanTier) => {
     setPlanTierState(tier)

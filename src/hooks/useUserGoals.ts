@@ -10,7 +10,7 @@ import {
 import { listUserStudySessions } from '@/lib/studySessions'
 
 export function useUserGoals() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isSessionReady } = useAuth()
   const [goals, setGoals] = useState<UserGoalView[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,9 +50,9 @@ export function useUserGoals() {
   }, [user?.id])
 
   useEffect(() => {
-    if (authLoading) return
+    if (!isSessionReady) return
     void refresh()
-  }, [authLoading, refresh])
+  }, [isSessionReady, refresh])
 
   const createGoal = useCallback(
     async (
@@ -78,7 +78,7 @@ export function useUserGoals() {
 
   return {
     goals,
-    isLoading: authLoading || isLoading,
+    isLoading: !isSessionReady || isLoading,
     error,
     isCreating,
     refresh,

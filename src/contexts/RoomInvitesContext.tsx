@@ -43,7 +43,7 @@ function upsertInvite(
 }
 
 export function RoomInvitesProvider({ children }: { children: ReactNode }) {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isSessionReady } = useAuth()
   const [incomingRoomInvites, setIncomingRoomInvites] = useState<IncomingRoomInvite[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [toast, setToast] = useState({ message: '', visible: false })
@@ -67,13 +67,13 @@ export function RoomInvitesProvider({ children }: { children: ReactNode }) {
   }, [user?.id])
 
   useEffect(() => {
-    if (authLoading) return
+    if (!isSessionReady) return
     void refresh()
-  }, [authLoading, refresh])
+  }, [isSessionReady, refresh])
 
   useEffect(() => {
     const userId = user?.id
-    if (!userId || authLoading) return
+    if (!userId || !isSessionReady) return
 
     return subscribeRoomAccessRealtime(userId, (event) => {
       if (event.type === 'DELETE') {
@@ -94,15 +94,15 @@ export function RoomInvitesProvider({ children }: { children: ReactNode }) {
         })
       })
     })
-  }, [user?.id, authLoading])
+  }, [user?.id, isSessionReady])
 
   useEffect(() => {
-    if (!user?.id || authLoading) return
+    if (!user?.id || !isSessionReady) return
     if (isSupabaseConfigured && !isDemoMode) return
     return subscribeRoomAccessStorageSync(() => {
       void refresh()
     })
-  }, [user?.id, authLoading, refresh])
+  }, [user?.id, isSessionReady, refresh])
 
   const acceptRoomInvite = useCallback((invite: IncomingRoomInvite) => {
     acknowledgeRoomInvite(invite.roomId, invite.grantedAt)
@@ -136,14 +136,14 @@ export function RoomInvitesProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       incomingRoomInvites,
-      isLoading: authLoading || isLoading,
+      isLoading: !isSessionReady || isLoading,
       acceptRoomInvite,
       declineRoomInvite,
       refresh,
     }),
     [
       incomingRoomInvites,
-      authLoading,
+      isSessionReady,
       isLoading,
       acceptRoomInvite,
       declineRoomInvite,

@@ -10,6 +10,11 @@ import {
 } from 'react'
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 import {
+  clearOAuthCallbackFromUrl,
+  isAuthSessionReady,
+  isOAuthCallbackUrl,
+} from '@/lib/auth/oauthCallback'
+import {
   clearLastActivity,
   isIdleExpired,
   touchLastActivity,
@@ -21,6 +26,7 @@ type AuthContextValue = {
   session: Session | null
   isLoading: boolean
   isAuthenticated: boolean
+  isSessionReady: boolean
   signOut: () => Promise<void>
 }
 
@@ -30,6 +36,12 @@ const ACTIVITY_TOUCH_EVENTS: AuthChangeEvent[] = [
   'SIGNED_IN',
   'TOKEN_REFRESHED',
   'INITIAL_SESSION',
+]
+
+const SESSION_READY_EVENTS: AuthChangeEvent[] = [
+  'SIGNED_IN',
+  'INITIAL_SESSION',
+  'TOKEN_REFRESHED',
 ]
 
 const ACTIVITY_THROTTLE_MS = 30_000
@@ -49,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(isSupabaseConfigured)
   const lastActivityTouchRef = useRef(0)
+  const pendingOAuthRef = useRef(isOAuthCallbackUrl())
 
   const expireIdleSession = useCallback(async () => {
     const supabase = getSupabase()
@@ -74,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false
+    const pendingOAuth = pendingOAuthRef.current
 
     const finishLoading = () => {
       if (!cancelled) setIsLoading(false)
@@ -85,9 +99,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true
     }
 
+    const finishOAuthCallback = (nextSession: Session | null) => {
+      if (!pendingOAuth) return
+      pendingOAuthRef.current = false
+      if (nextSession?.access_token) {
+        clearOAuthCallbackFromUrl()
+      }
+    }
+
     void (async () => {
       if (await checkIdleAndExpire()) {
         finishLoading()
+        return
+      }
+
+      if (pendingOAuth) {
         return
       }
 
@@ -115,6 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!nextSession?.user) {
         clearLastActivity()
         applySession(null, setSession, setUser)
+        if (pendingOAuthRef.current) {
+          pendingOAuthRef.current = false
+          clearOAuthCallbackFromUrl()
+        }
         finishLoading()
         return
       }
@@ -125,6 +155,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       applySession(nextSession, setSession, setUser)
+
+      if (
+        pendingOAuthRef.current &&
+        nextSession.access_token &&
+        SESSION_READY_EVENTS.includes(event)
+      ) {
+        finishOAuthCallback(nextSession)
+      }
+
       finishLoading()
     })
 
@@ -173,15 +212,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applySession(null, setSession, setUser)
   }, [])
 
+  const isSessionReady = isSupabaseConfigured
+    ? isAuthSessionReady(session, isLoading)
+    : !isLoading
+
   const value = useMemo(
     () => ({
       user,
       session,
       isLoading,
       isAuthenticated: Boolean(session?.user),
+      isSessionReady,
       signOut,
     }),
-    [user, session, isLoading, signOut],
+    [user, session, isLoading, isSessionReady, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
