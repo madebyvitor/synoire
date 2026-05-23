@@ -20,6 +20,28 @@ function mulberry32(seed: number) {
   }
 }
 
+/** Vaga-lumes espalhados pela tela (sessão ativa, fundo minimal). */
+function initAmbientFireflies(
+  count: number,
+  w: number,
+  h: number,
+  rand: () => number,
+): Firefly[] {
+  const padY = h * 0.06
+  const out: Firefly[] = []
+  for (let i = 0; i < count; i++) {
+    out.push({
+      x: rand() * w,
+      y: padY + rand() * (h - padY * 2),
+      vx: (rand() - 0.5) * 0.16,
+      vy: (rand() - 0.5) * 0.12,
+      phase: rand() * Math.PI * 2,
+      pulse: 0.55 + rand() * 0.45,
+    })
+  }
+  return out
+}
+
 function initFireflies(
   count: number,
   w: number,
@@ -132,7 +154,12 @@ export function ImmersiveCanvas({
       const horizonRatio =
         currentTheme === 'forest' ? 0.48 : currentTheme === 'rain' ? 0.56 : 0.58
       starsRef.current = initStars(starCount, w, h, rand)
-      if (!isMinimal) {
+      if (isMinimal) {
+        const ambientCount = reduced
+          ? 16
+          : Math.min(Math.max(18, Math.floor(n * 1.6)), 52)
+        firefliesRef.current = initAmbientFireflies(ambientCount, w, h, rand)
+      } else {
         const flyCount =
           currentTheme === 'rain'
             ? Math.max(4, Math.floor(n * 0.45))
@@ -140,8 +167,6 @@ export function ImmersiveCanvas({
               ? Math.max(4, Math.floor(n * 0.75))
               : n
         firefliesRef.current = initFireflies(flyCount, w, h, rand, horizonRatio)
-      } else {
-        firefliesRef.current = []
       }
     }
 
@@ -319,18 +344,25 @@ export function ImmersiveCanvas({
       const syncUntil = syncFlashUntilRef.current
       const inSyncFlash = syncUntil > 0 && now < syncUntil
 
-      const glowColor =
-        currentTheme === 'forest'
+      const glowColor = isMinimalBg
+        ? { shadow: '#a3a34f', fill: '195, 200, 130' }
+        : currentTheme === 'forest'
           ? { shadow: '#a8c878', fill: '180, 220, 120' }
           : currentTheme === 'rain'
             ? { shadow: '#b8d4e8', fill: '190, 220, 240' }
             : { shadow: '#d8ff5e', fill: '216, 255, 94' }
 
-      const minY = currentTheme === 'forest' ? h * 0.42 : h * 0.5
+      const minY = isMinimalBg
+        ? h * 0.05
+        : currentTheme === 'forest'
+          ? h * 0.42
+          : h * 0.5
+      const ambientPulse = isMinimalBg ? pulseSpeedRef.current * 0.65 : pulseSpeedRef.current
+      const ambientShadowScale = isMinimalBg ? shadowScale * 0.85 : shadowScale
 
       for (const f of flies) {
-        f.x += f.vx * speed
-        f.y += f.vy * speed
+        f.x += f.vx * speed * (isMinimalBg ? 0.75 : 1)
+        f.y += f.vy * speed * (isMinimalBg ? 0.75 : 1)
         if (f.x < -20) f.x = w + 20
         if (f.x > w + 20) f.x = -20
         if (f.y < minY) f.y = minY + 2
@@ -339,13 +371,15 @@ export function ImmersiveCanvas({
         const glow = inSyncFlash
           ? 0.9 + 0.1 * Math.sin(t * 0.008)
           : 0.35 +
-            0.65 * Math.sin(f.phase + t * pulseSpeedRef.current * f.pulse)
-        const r = 2 + glow * 2.2
+            0.65 * Math.sin(f.phase + t * ambientPulse * f.pulse)
+        const r = isMinimalBg ? 1.8 + glow * 2.4 : 2 + glow * 2.2
         ctx.shadowColor = glowColor.shadow
         ctx.shadowBlur = reduced
           ? 6
-          : (14 + glow * 10) * shadowScale
-        ctx.fillStyle = `rgba(${glowColor.fill}, ${0.45 + glow * 0.45})`
+          : (14 + glow * 10) * ambientShadowScale
+        ctx.fillStyle = `rgba(${glowColor.fill}, ${
+          isMinimalBg ? 0.28 + glow * 0.38 : 0.45 + glow * 0.45
+        })`
         ctx.beginPath()
         ctx.arc(f.x, f.y, r, 0, Math.PI * 2)
         ctx.fill()

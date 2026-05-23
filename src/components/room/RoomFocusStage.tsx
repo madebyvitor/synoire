@@ -1,5 +1,4 @@
 import { motion } from 'motion/react'
-import { RoomFireflyOrbs } from '@/components/room/RoomFireflyOrbs'
 import { RoomSessionFooter } from '@/components/room/RoomSessionFooter'
 import { RoomTimerRing } from '@/components/room/RoomTimerRing'
 import type { FocusCycle } from '@/lib/hubRooms/types'
@@ -14,9 +13,7 @@ type RoomFocusStageProps = {
   phase: RoomPhase
   remainingSeconds: number
   segmentDuration: number
-  presentCount: number
   focusCycle: FocusCycle
-  currentUserInitial: string
   prefersReducedMotion: boolean
   chromeClass: string
   timerRitualFade: boolean
@@ -27,9 +24,7 @@ export function RoomFocusStage({
   phase,
   remainingSeconds,
   segmentDuration,
-  presentCount,
   focusCycle,
-  currentUserInitial,
   prefersReducedMotion,
   chromeClass,
   timerRitualFade,
@@ -52,12 +47,6 @@ export function RoomFocusStage({
           variants={floatItem}
           className="relative w-full max-w-md"
         >
-          <RoomFireflyOrbs
-            presentCount={presentCount}
-            currentUserInitial={currentUserInitial}
-            phase={phase}
-            prefersReducedMotion={prefersReducedMotion}
-          />
           <motion.div variants={staggerItem}>
             <RoomTimerRing
               phase={phase}

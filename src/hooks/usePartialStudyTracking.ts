@@ -26,6 +26,7 @@ export function usePartialStudyTracking({
 }: UsePartialStudyTrackingArgs) {
   const joinTimeRef = useRef<number | null>(null)
   const savingRef = useRef(false)
+  const unloadFlushedRef = useRef(false)
   const sessionModeRef = useRef(sessionMode)
   const roomIdRef = useRef(roomId)
   const userIdRef = useRef(userId)
@@ -37,6 +38,7 @@ export function usePartialStudyTracking({
 
   const resetJoinTime = useCallback(() => {
     joinTimeRef.current = Date.now()
+    unloadFlushedRef.current = false
   }, [])
 
   const clearJoinTime = useCallback(() => {
@@ -82,6 +84,7 @@ export function usePartialStudyTracking({
     const minutes = computePartialMinutes(joinTime)
     if (minutes < 1) return
 
+    unloadFlushedRef.current = true
     joinTimeRef.current = Date.now()
 
     const supabase = getSupabase()
@@ -102,6 +105,7 @@ export function usePartialStudyTracking({
     if (sessionMode === 'active') {
       if (joinTimeRef.current == null) {
         joinTimeRef.current = Date.now()
+        unloadFlushedRef.current = false
       }
       return
     }
@@ -139,7 +143,10 @@ export function usePartialStudyTracking({
     return () => {
       window.removeEventListener('pagehide', onPageHide)
       window.removeEventListener('beforeunload', onBeforeUnload)
-      void savePartialSession()
+      if (!unloadFlushedRef.current) {
+        void savePartialSession()
+      }
+      unloadFlushedRef.current = false
     }
   }, [flushOnUnload, savePartialSession])
 

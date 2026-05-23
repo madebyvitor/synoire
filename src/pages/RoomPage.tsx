@@ -14,7 +14,6 @@ import { useStudyPartners } from '@/contexts/StudyPartnersContext'
 import { useAuthenticatedGlobalPresence } from '@/hooks/useAuthenticatedGlobalPresence'
 import { useUserPlan } from '@/contexts/UserPlanContext'
 import { useGlobalRoomTimer } from '@/hooks/useGlobalRoomTimer'
-import { useProfile } from '@/hooks/useProfile'
 import { useImmersiveTheme } from '@/hooks/useImmersiveTheme'
 import { usePartialStudyTracking } from '@/hooks/usePartialStudyTracking'
 import { useRecordStudySession } from '@/hooks/useRecordStudySession'
@@ -92,7 +91,6 @@ export function RoomPage() {
   )
   const prefersReducedMotion = usePrefersReducedMotion()
   const { user } = useAuth()
-  const { profile } = useProfile()
   const { hasGlowAccess, openPaywall } = useUserPlan()
   const { acceptedPartners } = useStudyPartners()
   const { selectedThemeId, effectiveThemeId, setTheme } = useImmersiveTheme()
@@ -344,14 +342,6 @@ export function RoomPage() {
   const segmentDuration = getSegmentDuration(phase, cycle)
   const focusCycle: FocusCycle = studyRoom?.focus_cycle ?? '25/5'
 
-  const currentUserInitial = useMemo(() => {
-    const fromDisplayName = profile?.displayName?.trim().charAt(0)
-    if (fromDisplayName) return fromDisplayName.toUpperCase()
-    const fromEmail = user?.email?.trim().charAt(0)
-    if (fromEmail) return fromEmail.toUpperCase()
-    return '?'
-  }, [profile?.displayName, user?.email])
-
   if (entryStatus !== 'ready') {
     const subtitle = entryMessage ?? roomEntrySubtitle(entryStatus)
     return (
@@ -411,9 +401,7 @@ export function RoomPage() {
           phase={phase}
           remainingSeconds={remainingSeconds}
           segmentDuration={segmentDuration}
-          presentCount={presentCount}
           focusCycle={focusCycle}
-          currentUserInitial={currentUserInitial}
           prefersReducedMotion={prefersReducedMotion}
           chromeClass={chromeClass}
           timerRitualFade={timerRitualFade}

@@ -30,20 +30,20 @@ export function getDemoUserStats(userId: string): DemoUserStats {
   return row ?? { userId, currentStreak: 0, totalHours: 0 }
 }
 
-function hadSessionToday(userId: string, now: Date): boolean {
+function sessionCountToday(userId: string, now: Date): number {
   try {
     const raw = localStorage.getItem('synoire_demo_study_sessions')
-    if (!raw) return false
+    if (!raw) return 0
     const sessions = JSON.parse(raw) as { user_id: string; created_at: string }[]
-    if (!Array.isArray(sessions)) return false
+    if (!Array.isArray(sessions)) return 0
     const todayKey = dateKeyInTz(now, STUDY_TIMEZONE)
-    return sessions.some(
+    return sessions.filter(
       (s) =>
         s.user_id === userId &&
         dateKeyInTz(new Date(s.created_at), STUDY_TIMEZONE) === todayKey,
-    )
+    ).length
   } catch {
-    return false
+    return 0
   }
 }
 
@@ -78,18 +78,18 @@ export function recordDemoStudyTime(
   input: CreateStudySessionInput,
 ): { stats: DemoUserStats; session: StudySessionView } {
   const now = new Date()
-  const hadToday = hadSessionToday(userId, now)
-  const lastDay = lastStudyDayBeforeToday(userId, now)
   const session = createDemoStudySession(userId, input)
+  const isFirstSessionToday = sessionCountToday(userId, now) === 1
 
   const rows = readAll().filter((r) => r.userId !== userId)
   const prev = getDemoUserStats(userId)
   let currentStreak = prev.currentStreak
   const totalHours = prev.totalHours + input.durationMinutes / 60
 
-  if (!hadToday) {
+  if (isFirstSessionToday) {
     const todayKey = dateKeyInTz(now, STUDY_TIMEZONE)
     const yesterdayKey = addDaysToDateKey(todayKey, -1)
+    const lastDay = lastStudyDayBeforeToday(userId, now)
     if (lastDay === yesterdayKey) {
       currentStreak = prev.currentStreak + 1
     } else {

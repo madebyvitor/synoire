@@ -18,7 +18,18 @@ function mapRpcError(message: string): string {
 
 export type RecordStudyTimeResult = UserStatsResult<{ sessionId: string }>
 
-export async function recordPartialStudyTime(
+let recordStudyTimeQueue: Promise<unknown> = Promise.resolve()
+
+function enqueueRecordStudyTime<T>(task: () => Promise<T>): Promise<T> {
+  const next = recordStudyTimeQueue.then(task, task)
+  recordStudyTimeQueue = next.then(
+    () => undefined,
+    () => undefined,
+  )
+  return next
+}
+
+async function invokeRecordStudyTime(
   userId: string,
   roomId: string,
   durationMinutes: number,
@@ -56,6 +67,16 @@ export async function recordPartialStudyTime(
   }
 
   return { ok: true, data: { sessionId } }
+}
+
+export async function recordPartialStudyTime(
+  userId: string,
+  roomId: string,
+  durationMinutes: number,
+): Promise<RecordStudyTimeResult> {
+  return enqueueRecordStudyTime(() =>
+    invokeRecordStudyTime(userId, roomId, durationMinutes),
+  )
 }
 
 /** Fetch session row after RPC (for createStudySession return shape). */
