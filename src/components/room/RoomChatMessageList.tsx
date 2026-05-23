@@ -59,7 +59,7 @@ export function RoomChatMessageList({
           Ainda em silêncio. Sussurre algo na pausa.
         </p>
       )}
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {messages.map((msg) => (
           <li key={msg.id}>
             <RoomChatMessageLine
