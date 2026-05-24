@@ -4,7 +4,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ImmersiveCanvas } from '@/components/room/ImmersiveCanvas'
 import { RoomFocusStage } from '@/components/room/RoomFocusStage'
 import { PreRoomLounge } from '@/components/room/PreRoomLounge'
-import { RoomChat, RoomChatToggleButton } from '@/components/room/RoomChat'
+import { RoomChat } from '@/components/room/RoomChat'
+import { RoomSessionToolbar } from '@/components/room/RoomSessionToolbar'
 import { RoomMediaEmbed } from '@/components/room/RoomMediaEmbed'
 import { SessionOnboarding } from '@/components/room/SessionOnboarding'
 import { InvitePartnersModal } from '@/components/room/InvitePartnersModal'
@@ -209,6 +210,9 @@ export function RoomPage() {
   const showInviteButton = Boolean(
     studyRoom && (!studyRoom.is_private || isRoomCreator),
   )
+  const inviteLabel = studyRoom?.is_private
+    ? 'Convidar parceiros'
+    : 'Compartilhar sala'
 
   const handleInvitePartnersClick = useCallback(() => {
     if (studyRoom?.is_private && !hasGlowAccess) {
@@ -441,69 +445,36 @@ export function RoomPage() {
       )}
 
       {showChrome && (
-        <motion.div
-          role="toolbar"
-          aria-label="Ações da sala"
-          className={`pointer-events-none fixed left-0 right-0 top-0 z-20 flex items-start justify-between gap-3 p-4 transition-opacity duration-500 sm:p-6 ${chromeClass}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <button
-            type="button"
-            disabled={isLeaving}
-            onClick={() => void onLeaveRoom()}
-            className="pointer-events-auto rounded-lg px-3 py-2 text-sm text-secondary hover:bg-elevated hover:text-primary disabled:opacity-50"
-          >
-            {isLeaving ? 'Salvando…' : 'Sair'}
-          </button>
-          <div className="pointer-events-auto flex items-center gap-2">
-            {showInviteButton && (
-              <button
-                type="button"
-                onClick={handleInvitePartnersClick}
-                className="rounded-lg px-3 py-2 text-sm text-firefly hover:bg-elevated"
-              >
-                {studyRoom?.is_private ? 'Convidar Parceiros' : 'Compartilhar sala'}
-              </button>
-            )}
-            <RoomChatToggleButton
-              open={chatOpen}
-              unreadCount={roomChat.unreadCount}
-              onClick={toggleChat}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setThemeModalOpen(true)
-                setChatOpen(false)
-              }}
-              className="rounded-lg px-3 py-2 text-sm text-secondary hover:bg-elevated hover:text-primary"
-              aria-expanded={themeModalOpen}
-            >
-              Ambiente
-            </button>
-          </div>
-        </motion.div>
+        <RoomSessionToolbar
+          variant="active"
+          chromeClass={chromeClass}
+          isLeaving={isLeaving}
+          onLeave={() => void onLeaveRoom()}
+          showInviteButton={showInviteButton}
+          inviteLabel={inviteLabel}
+          onInvite={handleInvitePartnersClick}
+          chatOpen={chatOpen}
+          unreadCount={roomChat.unreadCount}
+          onToggleChat={toggleChat}
+          themeModalOpen={themeModalOpen}
+          onOpenTheme={() => {
+            setThemeModalOpen(true)
+            setChatOpen(false)
+          }}
+        />
       )}
 
       {isLounge && (
-        <motion.div className="pointer-events-none fixed right-0 top-0 z-20 flex items-center gap-2 p-4 sm:p-6">
-          {showInviteButton && (
-            <button
-              type="button"
-              onClick={handleInvitePartnersClick}
-              className="pointer-events-auto rounded-lg px-3 py-2 text-sm text-firefly hover:bg-elevated"
-            >
-              {studyRoom?.is_private ? 'Convidar Parceiros' : 'Compartilhar sala'}
-            </button>
-          )}
-          <RoomChatToggleButton
-            open={chatOpen}
-            unreadCount={roomChat.unreadCount}
-            onClick={toggleChat}
-            className="pointer-events-auto"
-          />
-        </motion.div>
+        <RoomSessionToolbar
+          variant="lounge"
+          chromeClass=""
+          showInviteButton={showInviteButton}
+          inviteLabel={inviteLabel}
+          onInvite={handleInvitePartnersClick}
+          chatOpen={chatOpen}
+          unreadCount={roomChat.unreadCount}
+          onToggleChat={toggleChat}
+        />
       )}
 
       {chatEnabled && (
