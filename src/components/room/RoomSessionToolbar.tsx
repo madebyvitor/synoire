@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useId, useState } from 'react'
 import { RoomChatToggleButton } from '@/components/room/RoomChat'
+import { RoomPresenceBadge } from '@/components/room/RoomPresenceBadge'
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
@@ -33,6 +34,8 @@ const menuItemClass =
 type RoomSessionToolbarProps = {
   variant: 'active' | 'lounge'
   chromeClass: string
+  presentCount: number
+  prefersReducedMotion?: boolean
   isLeaving?: boolean
   onLeave?: () => void
   showInviteButton: boolean
@@ -48,6 +51,8 @@ type RoomSessionToolbarProps = {
 export function RoomSessionToolbar({
   variant,
   chromeClass,
+  presentCount,
+  prefersReducedMotion = false,
   isLeaving = false,
   onLeave,
   showInviteButton,
@@ -221,6 +226,13 @@ export function RoomSessionToolbar({
     </div>
   )
 
+  const badge = (
+    <RoomPresenceBadge
+      presentCount={presentCount}
+      prefersReducedMotion={prefersReducedMotion}
+    />
+  )
+
   if (variant === 'lounge') {
     return (
       <motion.div
@@ -230,7 +242,8 @@ export function RoomSessionToolbar({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="pointer-events-auto relative flex justify-end">
+        <div className="pointer-events-auto relative flex items-center justify-end gap-2">
+          {badge}
           {desktopActions}
           {mobileMenu}
         </div>
@@ -254,6 +267,9 @@ export function RoomSessionToolbar({
       >
         {isLeaving ? 'Salvando…' : 'Sair'}
       </button>
+      <div className="pointer-events-none flex flex-1 justify-center">
+        {badge}
+      </div>
       <div className="pointer-events-auto relative flex items-center">
         {desktopActions}
         {mobileMenu}

@@ -58,5 +58,5 @@ export function useStudyRoom(roomId: string | undefined) {
     return merged
   }, [room, presentCount, emptySince])
 
-  return { room: roomWithPresence, loading }
+  return { room: roomWithPresence, loading, presentCount }
 }

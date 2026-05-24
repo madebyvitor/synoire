@@ -40,6 +40,7 @@ vi.mock('@/hooks/useRoomEntry', () => ({
     entryStatus: 'ready',
     entryMessage: null,
     roomLoading: false,
+    presentCount: 1,
   }),
 }))
 

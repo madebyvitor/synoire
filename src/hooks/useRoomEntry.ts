@@ -16,9 +16,10 @@ export function useRoomEntry(roomId: string | undefined): {
   entryStatus: RoomEntryStatus
   entryMessage: string | null
   roomLoading: boolean
+  presentCount: number
 } {
   const { user } = useAuth()
-  const { room, loading: roomLoading } = useStudyRoom(roomId)
+  const { room, loading: roomLoading, presentCount } = useStudyRoom(roomId)
   const [joinResult, setJoinResult] = useState<CanJoinRoomResult | null>(null)
   const [joinLoading, setJoinLoading] = useState(Boolean(roomId && user?.id))
 
@@ -74,5 +75,6 @@ export function useRoomEntry(roomId: string | undefined): {
     entryStatus,
     entryMessage,
     roomLoading: roomLoading || joinLoading,
+    presentCount,
   }
 }

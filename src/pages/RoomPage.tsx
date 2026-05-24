@@ -73,7 +73,7 @@ export function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>()
   const location = useLocation()
   const navigate = useNavigate()
-  const { room: studyRoom, entryStatus, entryMessage } = useRoomEntry(roomId)
+  const { room: studyRoom, entryStatus, entryMessage, presentCount } = useRoomEntry(roomId)
 
   useAuthenticatedGlobalPresence({
     enabled: Boolean(roomId),
@@ -101,7 +101,6 @@ export function RoomPage() {
   const {
     phase,
     remainingSeconds,
-    presentCount,
     isIdle,
     startFocusTimer,
     isSegmentComplete,
@@ -455,6 +454,8 @@ export function RoomPage() {
         <RoomSessionToolbar
           variant="active"
           chromeClass={chromeClass}
+          presentCount={presentCount}
+          prefersReducedMotion={prefersReducedMotion}
           isLeaving={isLeaving}
           onLeave={() => void onLeaveRoom()}
           showInviteButton={showInviteButton}
@@ -475,6 +476,8 @@ export function RoomPage() {
         <RoomSessionToolbar
           variant="lounge"
           chromeClass=""
+          presentCount={presentCount}
+          prefersReducedMotion={prefersReducedMotion}
           showInviteButton={showInviteButton}
           inviteLabel={inviteLabel}
           onInvite={handleInvitePartnersClick}
