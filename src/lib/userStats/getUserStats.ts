@@ -47,20 +47,55 @@ export async function getUserStats(userId: string): Promise<UserStatsResult<User
     return { ok: false, message: 'Supabase não configurado.' }
   }
 
-  const { data, error } = await supabase
-    .from('user_stats')
-    .select('user_id, current_streak, total_hours, weekly_goal_minutes')
-    .eq('user_id', userId)
-    .maybeSingle()
+  const [statsResult, streakResult] = await Promise.all([
+    supabase
+      .from('user_stats')
+      .select('user_id, current_streak, total_hours, weekly_goal_minutes')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase.rpc('compute_streak_from_sessions', { p_user_id: userId }),
+  ])
 
-  if (error) {
-    if (import.meta.env.DEV) console.error('[userStats getUserStats]', error)
-    return { ok: false, message: mapQueryError(error.message) }
+  if (statsResult.error) {
+    if (import.meta.env.DEV) console.error('[userStats getUserStats]', statsResult.error)
+    return { ok: false, message: mapQueryError(statsResult.error.message) }
   }
 
-  if (!data) {
-    return { ok: true, data: EMPTY_STATS }
+  if (streakResult.error) {
+    if (import.meta.env.DEV) console.error('[userStats getUserStats streak]', streakResult.error)
+    return { ok: false, message: mapQueryError(streakResult.error.message) }
   }
 
-  return { ok: true, data: mapUserStatsRow(data as UserStatsRow) }
+  if (!statsResult.data) {
+    const computedStreak =
+      typeof streakResult.data === 'number' ? streakResult.data : 0
+    return {
+      ok: true,
+      data: { ...EMPTY_STATS, currentStreak: computedStreak },
+    }
+  }
+
+  const row = statsResult.data as UserStatsRow
+  const computedStreak =
+    typeof streakResult.data === 'number' ? streakResult.data : (row.current_streak ?? 0)
+  const storedStreak = row.current_streak ?? 0
+
+  if (computedStreak !== storedStreak) {
+    const { error: syncError } = await supabase
+      .from('user_stats')
+      .update({ current_streak: computedStreak, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+
+    if (syncError && import.meta.env.DEV) {
+      console.error('[userStats getUserStats sync streak]', syncError)
+    }
+  }
+
+  return {
+    ok: true,
+    data: {
+      ...mapUserStatsRow(row),
+      currentStreak: computedStreak,
+    },
+  }
 }

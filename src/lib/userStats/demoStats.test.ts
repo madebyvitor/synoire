@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEMO_USER_STATS_KEY, getDemoUserStats, recordDemoStudyTime } from './demoStats'
 
 const DEMO_SESSIONS_KEY = 'synoire_demo_study_sessions'
@@ -8,6 +8,10 @@ describe('recordDemoStudyTime', () => {
 
   beforeEach(() => {
     localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('adds total hours from duration minutes', () => {
@@ -48,7 +52,7 @@ describe('recordDemoStudyTime', () => {
     )
 
     recordDemoStudyTime(userId, { roomId: 'demo-room-1', durationMinutes: 10 })
-    expect(getDemoUserStats(userId).currentStreak).toBe(4)
+    expect(getDemoUserStats(userId).currentStreak).toBe(2)
   })
 
   it('resets streak to 1 after a gap', () => {
@@ -73,5 +77,29 @@ describe('recordDemoStudyTime', () => {
 
     recordDemoStudyTime(userId, { roomId: 'demo-room-1', durationMinutes: 10 })
     expect(getDemoUserStats(userId).currentStreak).toBe(1)
+  })
+
+  it('returns streak 0 after a full day without study', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-19T12:00:00.000Z'))
+    localStorage.setItem(
+      DEMO_SESSIONS_KEY,
+      JSON.stringify([
+        {
+          id: 'old',
+          user_id: userId,
+          room_id: 'demo-room-1',
+          duration_minutes: 25,
+          created_at: '2026-05-17T15:00:00.000Z',
+          rooms: { hub_id: 'demo-hub' },
+        },
+      ]),
+    )
+    localStorage.setItem(
+      DEMO_USER_STATS_KEY,
+      JSON.stringify([{ userId, currentStreak: 1, totalHours: 1 }]),
+    )
+
+    expect(getDemoUserStats(userId).currentStreak).toBe(0)
   })
 })

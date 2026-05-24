@@ -3,6 +3,7 @@ import type { StudySessionView } from '@/lib/studySessions'
 import {
   buildYearHeatmap,
   buildWeeklyBars,
+  computeStreakFromSessions,
   formatCountdown,
   hasSessionToday,
   hourInTz,
@@ -119,6 +120,37 @@ describe('minutesForGoal', () => {
       session('2026-05-17T11:00:00.000Z', 30, 'hub-b'),
     ]
     expect(minutesForGoal(sessions, 'hub-a', 'weekly')).toBe(60)
+    vi.useRealTimers()
+  })
+})
+
+describe('computeStreakFromSessions', () => {
+  const todaySp = new Date('2026-05-19T12:00:00.000Z')
+
+  it('returns 1 when only yesterday had a session (grace for today)', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(todaySp)
+    const points = toSessionPoints([session('2026-05-18T15:00:00.000Z', 25)])
+    expect(computeStreakFromSessions(points)).toBe(1)
+    vi.useRealTimers()
+  })
+
+  it('returns 0 after a full missed day', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(todaySp)
+    const points = toSessionPoints([session('2026-05-17T15:00:00.000Z', 25)])
+    expect(computeStreakFromSessions(points)).toBe(0)
+    vi.useRealTimers()
+  })
+
+  it('counts consecutive days through yesterday when today is empty', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(todaySp)
+    const points = toSessionPoints([
+      session('2026-05-17T15:00:00.000Z', 25),
+      session('2026-05-18T15:00:00.000Z', 30),
+    ])
+    expect(computeStreakFromSessions(points)).toBe(2)
     vi.useRealTimers()
   })
 })
