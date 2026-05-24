@@ -28,6 +28,12 @@ function loungeCopy(isPrep: boolean, phase: RoomPhase) {
       countdownLabel: 'Pausa começa em',
     }
   }
+  if (phase === 'long_break') {
+    return {
+      subtitle: 'Pausa longa do ciclo em andamento…',
+      countdownLabel: 'Próximo foco começa em',
+    }
+  }
   return {
     subtitle: 'Aguardando o próximo bloco de foco…',
     countdownLabel: 'Próximo foco começa em',

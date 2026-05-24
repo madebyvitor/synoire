@@ -119,10 +119,14 @@ export function formatRoomCardTimeLabel(
     return `Come\u00e7a em ${formatTimerSeconds(getPrepRemainingSeconds(resolved, now))}`
   }
 
-  if (resolved.status === 'break' && resolved.started_at) {
+  if (
+    (resolved.status === 'break' || resolved.status === 'long_break') &&
+    resolved.started_at
+  ) {
+    const pausePhase = resolved.status === 'long_break' ? 'long_break' : 'break'
     const secs = secondsUntilNextFocus(
       now,
-      { phase: 'break', startedAt: resolved.started_at },
+      { phase: pausePhase, startedAt: resolved.started_at },
       timerPayloadToCycleConfig(resolved),
     )
     return `Come\u00e7a em ${formatTimerSeconds(secs)}`
@@ -142,8 +146,9 @@ export function formatRoomCardTimeLabel(
 
 export function timerPayloadToRoomPhase(
   state: RoomTimerPayload,
-): 'focus' | 'break' | null {
+): 'focus' | 'break' | 'long_break' | null {
   if (state.status === 'idle') return null
   if (state.status === 'focus') return 'focus'
+  if (state.status === 'long_break') return 'long_break'
   return 'break'
 }

@@ -1,3 +1,5 @@
+import { advanceTimerOnSegmentComplete } from './advanceTimerSegment'
+export { advanceTimerOnSegmentComplete } from './advanceTimerSegment'
 import { toPersistedTimer } from './mapRoomRow'
 import { resolveTimerCatchUp } from './resolveTimerCatchUp'
 import type { PersistedTimerState, StudyRoom } from './types'
@@ -29,23 +31,8 @@ export function nextFocusTimerState(room: StudyRoom): PersistedTimerState | null
 export function nextAdvancedTimerState(room: StudyRoom): PersistedTimerState | null {
   const ts = room.current_timer_state
   if (ts.status === 'idle' || !ts.started_at) return null
+  const advanced = advanceTimerOnSegmentComplete(ts)
+  if (!advanced) return null
   const now = new Date().toISOString()
-  if (ts.status === 'focus') {
-    return toPersistedTimer(
-      {
-        ...ts,
-        status: 'break',
-        started_at: now,
-      },
-      room.focus_cycle,
-    )
-  }
-  return toPersistedTimer(
-    {
-      ...ts,
-      status: 'focus',
-      started_at: now,
-    },
-    room.focus_cycle,
-  )
+  return toPersistedTimer({ ...advanced, started_at: now }, room.focus_cycle)
 }

@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import { RoomCyclePills } from '@/components/room/RoomCyclePills'
 import { formatTimerSeconds, type RoomPhase } from '@/lib/roomTimer'
 
 const SIZE = 280
@@ -11,6 +12,7 @@ type RoomTimerRingProps = {
   phase: RoomPhase
   remainingSeconds: number
   segmentDuration: number
+  cycleCount?: number
   showProgress?: boolean
   timerRitualFade?: boolean
   prefersReducedMotion?: boolean
@@ -44,6 +46,7 @@ export function RoomTimerRing({
   phase,
   remainingSeconds,
   segmentDuration,
+  cycleCount = 0,
   showProgress = true,
   timerRitualFade = false,
   prefersReducedMotion = false,
@@ -59,11 +62,14 @@ export function RoomTimerRing({
       ? describeArc(CX, CY, RADIUS, 0, Math.min(progressDeg, 359.9))
       : ''
 
-  const strokeAccent = phase === 'focus' ? '#a3a34f' : '#6b8f7a'
+  const strokeAccent =
+    phase === 'focus' ? '#a3a34f' : phase === 'long_break' ? '#7b9eb8' : '#6b8f7a'
   const glowFilter =
     phase === 'focus'
       ? 'drop-shadow(0 0 6px rgba(163,163,79,0.45))'
-      : 'drop-shadow(0 0 6px rgba(107,143,122,0.35))'
+      : phase === 'long_break'
+        ? 'drop-shadow(0 0 8px rgba(123,158,184,0.45))'
+        : 'drop-shadow(0 0 6px rgba(107,143,122,0.35))'
 
   const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
     const angle = (i / TICK_COUNT) * 360
@@ -134,6 +140,11 @@ export function RoomTimerRing({
         <p className="mt-3 text-[0.65rem] font-medium uppercase tracking-[0.2em] text-secondary">
           Restante
         </p>
+        <RoomCyclePills
+          cycleCount={cycleCount}
+          phase={phase}
+          prefersReducedMotion={prefersReducedMotion}
+        />
       </div>
     </div>
   )

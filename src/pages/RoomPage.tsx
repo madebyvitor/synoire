@@ -106,6 +106,7 @@ export function RoomPage() {
     isSegmentComplete,
     startedAt,
     cycle,
+    cycleCount,
   } = timer
   useTimerSounds({ remainingSeconds, isIdle, enabled: entryStatus === 'ready' })
   useTabTimerTitle({
@@ -334,7 +335,10 @@ export function RoomPage() {
       prevPhaseRef.current = phase
       return
     }
-    if (prevPhaseRef.current === 'break' && phase === 'focus') {
+    if (
+      (prevPhaseRef.current === 'break' || prevPhaseRef.current === 'long_break') &&
+      phase === 'focus'
+    ) {
       playCycleStartRitual()
     }
     prevPhaseRef.current = phase
@@ -412,6 +416,7 @@ export function RoomPage() {
           phase={phase}
           remainingSeconds={remainingSeconds}
           segmentDuration={segmentDuration}
+          cycleCount={cycleCount}
           focusCycle={focusCycle}
           prefersReducedMotion={prefersReducedMotion}
           chromeClass={chromeClass}

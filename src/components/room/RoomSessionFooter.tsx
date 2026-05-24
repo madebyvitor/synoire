@@ -22,7 +22,12 @@ export function RoomSessionFooter({
   prefersReducedMotion = false,
   className = '',
 }: RoomSessionFooterProps) {
-  const phaseLabel = phase === 'focus' ? 'Sessão de foco' : 'Pausa curta'
+  const phaseLabel =
+    phase === 'focus'
+      ? 'Sessão de foco'
+      : phase === 'long_break'
+        ? 'Pausa longa'
+        : 'Pausa curta'
   const positionClass = embedded ? 'absolute inset-x-0 bottom-8' : 'fixed inset-x-0 bottom-8'
 
   return (
@@ -31,7 +36,11 @@ export function RoomSessionFooter({
     >
       <p
         className={`text-center text-[0.65rem] font-medium uppercase tracking-[0.2em] sm:text-xs ${
-          phase === 'focus' ? 'text-firefly/90' : 'text-aqua/90'
+          phase === 'focus'
+            ? 'text-firefly/90'
+            : phase === 'long_break'
+              ? 'text-sky-300/90'
+              : 'text-aqua/90'
         }`}
       >
         {phaseLabel} · {focusCycle}

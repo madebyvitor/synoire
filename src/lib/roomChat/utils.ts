@@ -1,7 +1,7 @@
 import type { RoomChatMessage } from './types'
 
 export type SessionMode = 'onboarding' | 'lounge' | 'active'
-export type RoomPhase = 'focus' | 'break'
+export type RoomPhase = 'focus' | 'break' | 'long_break'
 
 /** Chat send allowed in lounge or during break in active session. */
 export function canSendRoomChat(
@@ -10,7 +10,7 @@ export function canSendRoomChat(
 ): boolean {
   return (
     sessionMode === 'lounge' ||
-    (sessionMode === 'active' && phase === 'break')
+    (sessionMode === 'active' && (phase === 'break' || phase === 'long_break'))
   )
 }
 

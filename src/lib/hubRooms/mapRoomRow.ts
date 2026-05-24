@@ -50,6 +50,7 @@ export function mapRoomRow(
       started_at: timer.started_at ?? null,
       focus_sec: timer.focus_sec ?? getCycleDurations(focus_cycle).focusSec,
       break_sec: timer.break_sec ?? getCycleDurations(focus_cycle).breakSec,
+      cycle_count: timer.cycle_count,
       focus_cycle,
     }),
     created_at: row.created_at,

@@ -1,5 +1,5 @@
 import { persistedToPayload, toPersistedTimer } from './mapRoomRow'
-import { catchUpTimerState } from './timerMutations'
+import { advanceTimerOnSegmentComplete, catchUpTimerState } from './timerMutations'
 import type { CreateRoomInput, HubRoomsAdapter, StudyRoom } from './types'
 import { buildCreatePayload, filterVisibleRooms, validateTheme } from './utils'
 
@@ -160,22 +160,13 @@ export const mockHubRoomsAdapter: HubRoomsAdapter = {
     return mutateRoom(roomId, (room) => {
       const ts = room.current_timer_state
       if (ts.status === 'idle' || !ts.started_at) return room
+      const advanced = advanceTimerOnSegmentComplete(ts)
+      if (!advanced) return room
       const now = new Date().toISOString()
-      if (ts.status === 'focus') {
-        return {
-          ...room,
-          current_timer_state: {
-            ...ts,
-            status: 'break',
-            started_at: now,
-          },
-        }
-      }
       return {
         ...room,
         current_timer_state: {
-          ...ts,
-          status: 'focus',
+          ...advanced,
           started_at: now,
         },
       }

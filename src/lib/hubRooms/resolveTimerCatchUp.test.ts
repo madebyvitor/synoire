@@ -83,4 +83,39 @@ describe('resolveTimerCatchUp', () => {
     expect(changed).toBe(false)
     expect(resolved).toEqual(state)
   })
+
+  it('enters long_break after 4th focus when cycle_count was 3', () => {
+    const focusStart = new Date(t0.getTime() - 26 * 60 * 1000).toISOString()
+    const state = payload({
+      status: 'focus',
+      started_at: focusStart,
+      cycle_count: 3,
+    })
+    const { resolved, changed } = resolveTimerCatchUp(state, t0)
+    expect(changed).toBe(true)
+    expect(resolved.status).toBe('long_break')
+    expect(resolved.cycle_count).toBe(4)
+  })
+
+  it('advances completed long_break into focus', () => {
+    const longBreakStart = new Date(t0.getTime() - 16 * 60 * 1000).toISOString()
+    const state = payload({
+      status: 'long_break',
+      started_at: longBreakStart,
+      cycle_count: 4,
+    })
+    const { resolved, changed } = resolveTimerCatchUp(state, t0)
+    expect(changed).toBe(true)
+    expect(resolved.status).toBe('focus')
+    expect(resolved.cycle_count).toBe(4)
+  })
+
+  it('defaults missing cycle_count to 0 on first focus completion', () => {
+    const focusStart = new Date(t0.getTime() - 26 * 60 * 1000).toISOString()
+    const state = payload({ status: 'focus', started_at: focusStart })
+    const { resolved, changed } = resolveTimerCatchUp(state, t0)
+    expect(changed).toBe(true)
+    expect(resolved.status).toBe('break')
+    expect(resolved.cycle_count).toBe(1)
+  })
 })

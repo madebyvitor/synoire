@@ -71,6 +71,7 @@ function studyRoomToTimerState(
       startedAt: resolved.started_at ?? new Date(now).toISOString(),
       presentCount: room.present_count,
       cycle,
+      cycleCount: resolved.cycle_count ?? 0,
       isIdle: true,
     }
   }
@@ -80,6 +81,7 @@ function studyRoomToTimerState(
     startedAt: resolved.started_at!,
     presentCount: room.present_count,
     cycle,
+    cycleCount: resolved.cycle_count ?? 0,
     isIdle: false,
   }
 }
@@ -195,6 +197,12 @@ export function useGlobalRoomTimer(
 
   const presentCount = derived.presentCount ?? mockState.presentCount ?? 128
 
+  const cycleCount =
+    catchUp.resolved?.cycle_count ??
+    storedPayload?.cycle_count ??
+    derived.cycleCount ??
+    0
+
   return {
     phase: derived.phase as RoomPhase,
     remainingSeconds,
@@ -204,6 +212,7 @@ export function useGlobalRoomTimer(
     isSegmentComplete: isComplete,
     isIdle,
     cycle: config,
+    cycleCount,
     advancePhase,
     startFocusTimer,
   }

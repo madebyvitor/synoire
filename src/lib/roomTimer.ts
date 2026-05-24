@@ -1,7 +1,9 @@
+import { CYCLES_BEFORE_LONG_BREAK, LONG_BREAK_SECONDS } from '@/lib/hubRooms/cycles'
+
 export const FOCUS_SECONDS = 25 * 60
 export const BREAK_SECONDS = 5 * 60
 
-export type RoomPhase = 'focus' | 'break'
+export type RoomPhase = 'focus' | 'break' | 'long_break'
 
 export type RoomCycleConfig = {
   focusSec: number
@@ -18,17 +20,21 @@ export type RoomTimerState = {
   startedAt: string | Date
   presentCount?: number
   cycle?: RoomCycleConfig
+  cycleCount?: number
 }
 
 export function getSegmentDuration(
   phase: RoomPhase,
   config: RoomCycleConfig = DEFAULT_CYCLE_CONFIG,
 ): number {
-  return phase === 'focus' ? config.focusSec : config.breakSec
+  if (phase === 'focus') return config.focusSec
+  if (phase === 'long_break') return LONG_BREAK_SECONDS
+  return config.breakSec
 }
 
 export function getNextPhase(phase: RoomPhase): RoomPhase {
-  return phase === 'focus' ? 'break' : 'focus'
+  if (phase === 'focus') return 'break'
+  return 'focus'
 }
 
 function toMs(value: string | Date): number {
@@ -64,7 +70,7 @@ export function secondsUntilNextFocus(
   const { phase, startedAt } = state
   const { remainingSeconds } = getCyclePosition(now, startedAt, phase, config)
 
-  if (phase === 'break') {
+  if (phase === 'break' || phase === 'long_break') {
     return remainingSeconds
   }
 
@@ -76,9 +82,23 @@ export function buildAdvancedState(
   now: Date = new Date(),
   config: RoomCycleConfig = prev.cycle ?? DEFAULT_CYCLE_CONFIG,
 ): RoomTimerState {
+  const count = prev.cycleCount ?? 0
+  if (prev.phase === 'focus') {
+    const newCount = count + 1
+    const phase: RoomPhase =
+      newCount % CYCLES_BEFORE_LONG_BREAK === 0 ? 'long_break' : 'break'
+    return {
+      ...prev,
+      phase,
+      cycleCount: newCount,
+      startedAt: now.toISOString(),
+      cycle: config,
+    }
+  }
   return {
     ...prev,
-    phase: getNextPhase(prev.phase),
+    phase: 'focus',
+    cycleCount: count,
     startedAt: now.toISOString(),
     cycle: config,
   }

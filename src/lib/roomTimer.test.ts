@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import { LONG_BREAK_SECONDS } from '@/lib/hubRooms/cycles'
 import {
   BREAK_SECONDS,
   FOCUS_SECONDS,
   buildAdvancedState,
   getCyclePosition,
   getNextPhase,
+  getSegmentDuration,
   secondsUntilNextFocus,
 } from './roomTimer'
 
@@ -31,11 +33,23 @@ describe('getCyclePosition', () => {
   })
 })
 
+describe('getSegmentDuration', () => {
+  it('uses fixed duration for long_break', () => {
+    expect(getSegmentDuration('long_break')).toBe(LONG_BREAK_SECONDS)
+  })
+})
+
 describe('secondsUntilNextFocus', () => {
   it('during break equals break remaining', () => {
     const startedAt = new Date(t0.getTime() - 2 * 60 * 1000)
     const secs = secondsUntilNextFocus(t0, { phase: 'break', startedAt })
     expect(secs).toBe(BREAK_SECONDS - 2 * 60)
+  })
+
+  it('during long_break equals long break remaining', () => {
+    const startedAt = new Date(t0.getTime() - 5 * 60 * 1000)
+    const secs = secondsUntilNextFocus(t0, { phase: 'long_break', startedAt })
+    expect(secs).toBe(LONG_BREAK_SECONDS - 5 * 60)
   })
 
   it('during focus equals focus remaining plus full break', () => {
@@ -51,7 +65,19 @@ describe('buildAdvancedState', () => {
     const now = new Date('2026-05-16T12:25:00.000Z')
     const next = buildAdvancedState(prev, now)
     expect(next.phase).toBe('break')
+    expect(next.cycleCount).toBe(1)
     expect(next.startedAt).toBe(now.toISOString())
+  })
+
+  it('enters long_break after 4th focus in mock state', () => {
+    const prev = {
+      phase: 'focus' as const,
+      startedAt: t0.toISOString(),
+      cycleCount: 3,
+    }
+    const next = buildAdvancedState(prev, new Date('2026-05-16T12:25:00.000Z'))
+    expect(next.phase).toBe('long_break')
+    expect(next.cycleCount).toBe(4)
   })
 })
 
@@ -59,5 +85,6 @@ describe('getNextPhase', () => {
   it('alternates focus and break', () => {
     expect(getNextPhase('focus')).toBe('break')
     expect(getNextPhase('break')).toBe('focus')
+    expect(getNextPhase('long_break')).toBe('focus')
   })
 })

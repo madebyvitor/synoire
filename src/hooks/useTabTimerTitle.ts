@@ -17,7 +17,12 @@ function buildTabTitle(
 ): string {
   const time = formatTimerSeconds(remainingSeconds)
   if (isIdle) return `(${time}) Preparando - ${DEFAULT_TITLE}`
-  const label = phase === 'focus' ? 'Foco' : 'Pausa'
+  const label =
+    phase === 'focus'
+      ? 'Foco'
+      : phase === 'long_break'
+        ? 'Pausa Longa'
+        : 'Pausa'
   return `(${time}) ${label} - ${DEFAULT_TITLE}`
 }
 

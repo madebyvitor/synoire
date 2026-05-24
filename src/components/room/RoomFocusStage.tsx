@@ -13,6 +13,7 @@ type RoomFocusStageProps = {
   phase: RoomPhase
   remainingSeconds: number
   segmentDuration: number
+  cycleCount?: number
   focusCycle: FocusCycle
   prefersReducedMotion: boolean
   chromeClass: string
@@ -24,6 +25,7 @@ export function RoomFocusStage({
   phase,
   remainingSeconds,
   segmentDuration,
+  cycleCount = 0,
   focusCycle,
   prefersReducedMotion,
   chromeClass,
@@ -52,6 +54,7 @@ export function RoomFocusStage({
               phase={phase}
               remainingSeconds={remainingSeconds}
               segmentDuration={segmentDuration}
+              cycleCount={cycleCount}
               timerRitualFade={timerRitualFade}
               prefersReducedMotion={prefersReducedMotion}
             />

@@ -22,11 +22,15 @@ export function shouldPromoteLoungeToActive(
   }
 
   if (target === 'break') {
-    return phase === 'break'
+    return phase === 'break' || phase === 'long_break'
   }
 
   if (target === 'focus') {
-    return phase === 'focus' && !isIdle && enteredPhase === 'break'
+    return (
+      phase === 'focus' &&
+      !isIdle &&
+      (enteredPhase === 'break' || enteredPhase === 'long_break')
+    )
   }
 
   return false

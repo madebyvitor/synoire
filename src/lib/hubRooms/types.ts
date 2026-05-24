@@ -1,12 +1,14 @@
 export type FocusCycle = '25/5' | '50/10' | '90/15'
 
-export type RoomTimerStatus = 'idle' | 'focus' | 'break'
+export type RoomTimerStatus = 'idle' | 'focus' | 'break' | 'long_break'
 
 export type RoomTimerPayload = {
   status: RoomTimerStatus
   started_at: string | null
   focus_sec: number
   break_sec: number
+  /** Completed focus segments in the current Pomodoro block (defaults to 0 if absent). */
+  cycle_count?: number
 }
 
 /** JSONB column `current_timer_state` on `rooms`. */

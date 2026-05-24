@@ -20,3 +20,7 @@ export const FOCUS_CYCLE_OPTIONS: { value: FocusCycle; label: string }[] = [
 export function getCycleDurations(cycle: FocusCycle): CycleDurations {
   return CYCLE_MAP[cycle]
 }
+
+/** Fixed long break after every N focus segments (independent of FocusCycle). */
+export const LONG_BREAK_SECONDS = 15 * 60
+export const CYCLES_BEFORE_LONG_BREAK = 4
