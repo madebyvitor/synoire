@@ -36,7 +36,7 @@ describe('signUp', () => {
     expect(result).toEqual({ ok: true, needsEmailConfirmation: true })
   })
 
-  it('updates avatar when session exists', async () => {
+  it('signs up with username metadata only when session exists', async () => {
     signUpMock.mockResolvedValue({
       data: { user: { id: 'u1' }, session: { access_token: 't' } },
       error: null,
@@ -45,11 +45,19 @@ describe('signUp', () => {
       email: 'a@b.com',
       password: '12345678',
       username: 'vitor',
-      avatarUrl: 'https://example.com/a.png',
     })
     expect(result).toEqual({ ok: true, needsEmailConfirmation: false })
-    expect(updateMock).toHaveBeenCalledWith({ avatar_url: 'https://example.com/a.png' })
-    expect(eqMock).toHaveBeenCalledWith('id', 'u1')
+    expect(signUpMock).toHaveBeenCalledWith({
+      email: 'a@b.com',
+      password: '12345678',
+      options: {
+        data: {
+          username: 'vitor',
+        },
+      },
+    })
+    expect(updateMock).not.toHaveBeenCalled()
+    expect(eqMock).not.toHaveBeenCalled()
   })
 
   it('maps auth errors', async () => {

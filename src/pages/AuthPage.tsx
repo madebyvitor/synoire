@@ -44,7 +44,6 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -130,7 +129,6 @@ export function AuthPage() {
       email,
       password,
       username,
-      avatarUrl: avatarUrl.trim() || null,
     })
     setIsSubmitting(false)
     if (!result.ok) {
@@ -280,19 +278,6 @@ export function AuthPage() {
                 }}
                 className={inputClass}
                 placeholder="concurseiro_ninja"
-              />
-            </label>
-            <label className="block text-sm text-secondary">
-              URL do avatar <span className="text-secondary/60">(opcional)</span>
-              <input
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => {
-                  setAvatarUrl(e.target.value)
-                  setError(null)
-                }}
-                className={inputClass}
-                placeholder="https://…"
               />
             </label>
           </>
