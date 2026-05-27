@@ -8,6 +8,7 @@ function mapUserStatsRow(row: UserStatsRow): UserStatsView {
     currentStreak: row.current_streak ?? 0,
     totalHours: Number(row.total_hours ?? 0),
     weeklyGoalMinutes: row.weekly_goal_minutes ?? 0,
+    hasSeenWelcome: row.has_seen_welcome ?? false,
   }
 }
 
@@ -15,6 +16,7 @@ const EMPTY_STATS: UserStatsView = {
   currentStreak: 0,
   totalHours: 0,
   weeklyGoalMinutes: 0,
+  hasSeenWelcome: false,
 }
 
 function mapQueryError(message: string): string {
@@ -34,6 +36,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult<User
         currentStreak: demo.currentStreak,
         totalHours: demo.totalHours,
         weeklyGoalMinutes: 0,
+        hasSeenWelcome: true,
       },
     }
   }
@@ -50,7 +53,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult<User
   const [statsResult, streakResult] = await Promise.all([
     supabase
       .from('user_stats')
-      .select('user_id, current_streak, total_hours, weekly_goal_minutes')
+      .select('user_id, current_streak, total_hours, weekly_goal_minutes, has_seen_welcome')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase.rpc('compute_streak_from_sessions', { p_user_id: userId }),

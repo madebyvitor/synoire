@@ -5,6 +5,7 @@ export {
   recordPartialStudyTime,
   type RecordStudyTimeResult,
 } from './recordPartialStudyTime'
+export { markWelcomeAsSeen } from './markWelcomeAsSeen'
 export { needsWeeklyGoalOnboarding } from './needsWeeklyGoalOnboarding'
 export { updateWeeklyGoalMinutes } from './updateWeeklyGoalMinutes'
 export {

@@ -78,7 +78,9 @@ export function DashboardPage() {
   const { stats, isLoading: statsLoading } = useUserStats()
   const isLoading = sessionsLoading || statsLoading
   const needsOnboarding =
-    !statsLoading && needsWeeklyGoalOnboarding(stats.weeklyGoalMinutes)
+    !statsLoading &&
+    stats.hasSeenWelcome &&
+    needsWeeklyGoalOnboarding(stats.weeklyGoalMinutes)
 
   const points = useMemo(() => toSessionPoints(sessions), [sessions])
 

@@ -9,12 +9,18 @@ vi.mock('@/lib/supabase', () => ({
 
 vi.mock('@/hooks/useUserStats', () => ({
   useUserStats: () => ({
-    stats: { currentStreak: 0, totalHours: 0, weeklyGoalMinutes: 0 },
+    stats: {
+      currentStreak: 0,
+      totalHours: 0,
+      weeklyGoalMinutes: 0,
+      hasSeenWelcome: true,
+    },
     isLoading: false,
     error: null,
     isSaving: false,
     refresh: vi.fn(),
     saveWeeklyGoal: vi.fn(async () => ({ ok: true as const })),
+    completeWelcomeOnboarding: vi.fn(async () => ({ ok: true as const })),
   }),
 }))
 

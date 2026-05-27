@@ -9,7 +9,12 @@ vi.mock('@/lib/supabase', () => ({
 
 vi.mock('@/hooks/useUserStats', () => ({
   useUserStats: () => ({
-    stats: { currentStreak: 0, totalHours: 0, weeklyGoalMinutes: 1200 },
+    stats: {
+      currentStreak: 0,
+      totalHours: 0,
+      weeklyGoalMinutes: 1200,
+      hasSeenWelcome: true,
+    },
     isLoading: false,
     error: null,
     isSaving: false,
