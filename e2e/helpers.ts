@@ -50,10 +50,11 @@ export async function completeWelcomeAndGoalOnboarding(page: Page) {
   const welcome = page.getByRole('dialog', { name: /bem-vindo ao synoire/i })
   if (await welcome.isVisible().catch(() => false)) {
     await welcome.getByRole('button', { name: 'Definir minha Meta' }).click()
-    await expect(page.getByLabel('Horas por semana')).toBeVisible({ timeout: 15_000 })
-    await page.getByLabel('Horas por semana').fill('10')
-    await welcome.getByRole('button', { name: 'Salvar e Começar' }).click()
-    await expect(welcome).toBeHidden({ timeout: 30_000 })
+    const goalDialog = page.getByRole('dialog', { name: /qual é o seu objetivo/i })
+    await expect(goalDialog.getByLabel('Horas por semana')).toBeVisible({ timeout: 15_000 })
+    await goalDialog.getByLabel('Horas por semana').fill('10')
+    await goalDialog.getByRole('button', { name: 'Salvar e Começar' }).click()
+    await expect(goalDialog).toBeHidden({ timeout: 30_000 })
     return
   }
 
