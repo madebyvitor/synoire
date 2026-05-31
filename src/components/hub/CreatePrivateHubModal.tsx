@@ -47,7 +47,7 @@ export function CreatePrivateHubModal({
     async (e: React.FormEvent) => {
       e.preventDefault()
       const result = validatePrivateHubName(name)
-      if (!result.ok) {
+      if (result.ok === false) {
         setError(result.error)
         return
       }
