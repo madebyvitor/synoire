@@ -26,13 +26,13 @@ export function StreakPredictionCard({
 
   return (
     <section className="mt-10 rounded-2xl border border-border bg-surface p-6">
-      <h2 className="text-sm font-medium text-primary">Previsao de Streak</h2>
+      <h2 className="text-sm font-medium text-primary">Previsão de Streak</h2>
       <p className="mt-2 text-sm text-secondary">
         {studiedToday ?
-          'Sua ofensiva esta segura por hoje.'
+          'Sua ofensiva está segura por hoje.'
         : currentStreak > 0 ?
-          'Estude antes da meia-noite para manter sua sequencia.'
-        : 'Projecao com base no seu ritmo recente.'}
+          'Estude antes da meia-noite para manter sua sequência.'
+        : 'Projeção com base no seu ritmo recente.'}
       </p>
       <GlowLockedOverlay className="mt-6">
         {isLoading ?
@@ -80,7 +80,7 @@ function StreakBody({
             <span className="text-2xl font-semibold tabular-nums text-firefly">
               {countdown}
             </span>
-            <p className="mt-1 text-xs text-secondary">ate a meia-noite (SP)</p>
+            <p className="mt-1 text-xs text-secondary">até a meia-noite (SP)</p>
           </div>
         : (
           <span className="text-2xl font-semibold tabular-nums text-firefly">
@@ -103,9 +103,9 @@ function StreakBody({
       </div>
       <p className="text-xs text-secondary">
         {studiedToday ?
-          `Voce esta com ${streakLabel} de ofensiva. Continue estudando para manter o ritmo.`
+          `Você está com ${streakLabel} de ofensiva. Continue estudando para manter o ritmo.`
         : currentStreak > 0 ?
-          `Estude hoje para nao perder sua ofensiva de ${streakLabel}. Restam ${countdown} (horario de Brasilia).`
+          `Estude hoje para não perder sua ofensiva de ${streakLabel}. Restam ${countdown} (horário de Brasília).`
         : 'Complete um pomodoro em uma sala para iniciar sua ofensiva.'}
       </p>
     </div>
